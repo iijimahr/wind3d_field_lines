@@ -1,17 +1,6 @@
 """Public API for the wind3d_field_lines package."""
 
-from .integrator import (
-    compute_open_field_fraction,
-    map_field_lines_to_height,
-    trace_field_lines,
-)
-from .types import FieldLineResult, ObservationMapResult, OpenFieldResult
+from .integrator import trace_field_lines
+from .types import FieldLineResult
 
-__all__ = [
-    "trace_field_lines",
-    "compute_open_field_fraction",
-    "map_field_lines_to_height",
-    "FieldLineResult",
-    "OpenFieldResult",
-    "ObservationMapResult",
-]
+__all__ = ["trace_field_lines", "FieldLineResult"]

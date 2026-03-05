@@ -5,20 +5,7 @@ import importlib
 import numpy as np
 import pytest
 
-from wind3d_field_lines import (
-    compute_open_field_fraction,
-    map_field_lines_to_height,
-    trace_field_lines,
-)
-
-
-@pytest.fixture(scope="module")
-def has_extension() -> bool:
-    try:
-        importlib.import_module("wind3d_field_lines._bbtobln")
-    except ImportError:
-        return False
-    return True
+from wind3d_field_lines import trace_field_lines
 
 
 def _build_uniform_case(dtype: type[np.floating]) -> tuple[np.ndarray, ...]:
@@ -147,58 +134,3 @@ def test_import_extension_module() -> None:
         pytest.skip("Fortran extension is not built.")
     mod = importlib.import_module("wind3d_field_lines._bbtobln")
     assert hasattr(mod, "bbtobln")
-
-
-@pytest.mark.skipif(
-    importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran extension is not built.",
-)
-def test_compute_open_field_fraction() -> None:
-    i_bln = np.full((1, 5), 4.0, dtype=np.float64)
-    j_bln = np.full((1, 5), 4.0, dtype=np.float64)
-    k_bln = np.array([[1.0, 2.0, 3.0, 4.0, 5.0]], dtype=np.float64)
-    lmin = np.array([1], dtype=np.int32)
-    lmax = np.array([5], dtype=np.int32)
-    bzt = np.ones((7, 7, 5), dtype=np.float64)
-
-    result = compute_open_field_fraction(
-        i_bln=i_bln,
-        j_bln=j_bln,
-        k_bln=k_bln,
-        lmin_bln=lmin,
-        lmax_bln=lmax,
-        bzt=bzt,
-        k_min=2,
-        k_max=4,
-        margin=0,
-    )
-
-    assert result.f_opn.shape == (7, 7, 5)
-    assert np.all((0.0 <= result.f_opn) & (result.f_opn <= 1.0))
-    assert np.max(result.f_opn[:, :, 2]) > 0.0
-
-
-@pytest.mark.skipif(
-    importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran extension is not built.",
-)
-def test_map_field_lines_to_height() -> None:
-    i_bln = np.array([[2.0, 2.0, 2.0, 2.0, 2.0]], dtype=np.float64)
-    j_bln = np.array([[3.0, 3.0, 3.0, 3.0, 3.0]], dtype=np.float64)
-    k_bln = np.array([[1.0, 2.0, 3.0, 4.0, 5.0]], dtype=np.float64)
-    lmin = np.array([1], dtype=np.int32)
-    lmax = np.array([5], dtype=np.int32)
-
-    result = map_field_lines_to_height(
-        i_bln=i_bln,
-        j_bln=j_bln,
-        k_bln=k_bln,
-        lmin_bln=lmin,
-        lmax_bln=lmax,
-        lcen_bln=3,
-        k_obs=4,
-    )
-
-    np.testing.assert_allclose(result.i_obs, np.array([2.0]))
-    np.testing.assert_allclose(result.j_obs, np.array([3.0]))
-    np.testing.assert_allclose(result.dk_obs, np.array([1.0]))

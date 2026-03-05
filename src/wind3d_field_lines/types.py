@@ -18,19 +18,3 @@ class FieldLineResult:
     lcen: int
     nx: int
     lx: int
-
-
-@dataclass(frozen=True)
-class OpenFieldResult:
-    """Container for open-field area filling factors."""
-
-    f_opn: NDArray[np.float64]
-
-
-@dataclass(frozen=True)
-class ObservationMapResult:
-    """Container for footpoint mapping results at an observation height."""
-
-    i_obs: NDArray[np.float64]
-    j_obs: NDArray[np.float64]
-    dk_obs: NDArray[np.float64]
