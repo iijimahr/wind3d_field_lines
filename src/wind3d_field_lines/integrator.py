@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any
+import importlib
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -96,7 +97,7 @@ def trace_field_lines(
     lmax_bln = np.zeros(nx_bln, dtype=np.int32)
 
     try:
-        from . import _bbtobln
+        _bbtobln = cast(Any, importlib.import_module("wind3d_field_lines._bbtobln"))
     except ImportError as exc:
         raise ImportError(
             "Failed to import the Fortran extension. Run `pip install -e '.[dev]'`."

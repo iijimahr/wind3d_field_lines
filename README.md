@@ -27,6 +27,24 @@ pip install -U pip && pip install -e ".[dev,docs]"
 ```shell
 make test         # Run lint, doctest, and unit tests
 make pytest       # Run unit tests
+make typecheck    # Run static type checking
 make docs         # Build documentation
 make clean        # Clean build artifacts
 ```
+
+## CI/CD
+
+GitHub Actions runs validation on pushes and pull requests:
+
+- `ruff check` (without auto-fix)
+- `ruff format --check`
+- `mypy src`
+- `pytest`
+- `sphinx-build -b doctest`
+- `sphinx-build -b html`
+
+Documentation is deployed to GitHub Pages only when changes are merged into
+`main` (or manually via workflow dispatch), not on regular branch pushes.
+
+Published docs URL:
+<https://iijimahr.github.io/wind3d_field_lines/>

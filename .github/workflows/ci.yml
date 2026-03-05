@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install Fortran compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,docs]"
+
+      - name: Lint (ruff)
+        run: ruff check . --no-fix
+
+      - name: Format check (ruff)
+        run: ruff format --check .
+
+      - name: Type check (mypy)
+        run: python -m mypy src
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Doctest
+        run: sphinx-build -b doctest docs/source docs/build/doctest
+
+      - name: Build docs
+        run: sphinx-build -b html docs/source docs/build/html

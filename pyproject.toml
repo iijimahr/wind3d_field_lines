@@ -17,7 +17,7 @@ requires-python = ">=3.11"
 dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
 docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
 
 [tool.setuptools]
@@ -45,3 +45,9 @@ select = [
 ignore = [
   "E203", # Black compatibility
 ]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+ignore_missing_imports = true
+files = ["src"]

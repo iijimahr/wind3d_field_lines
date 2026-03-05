@@ -8,6 +8,7 @@ test:
 	@make pytest
 	@make doctest
 	@make lint
+	@make typecheck
 	@make format-check
 
 .PHONY: pytest
@@ -21,6 +22,10 @@ doctest:
 .PHONY: lint
 lint:
 	ruff check .
+
+.PHONY: typecheck
+typecheck:
+	python -m mypy src
 
 .PHONY: format
 format:
