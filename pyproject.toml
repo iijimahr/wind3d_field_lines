@@ -18,7 +18,7 @@ dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
-docs = ["sphinx>=8.0"]
+docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -28,3 +28,20 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+fix = true
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle error
+  "F",  # pyflakes
+  "I",  # isort
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade
+]
+ignore = [
+  "E203", # Black compatibility
+]

@@ -2,32 +2,31 @@
 
 Initial implementation of a magnetic field-line tracer for wind3d data.
 
-## Public API (Current Stage)
-
-- `trace_field_lines`: Trace magnetic field lines
-
-## Development Setup
-
-```bash
-pip install -e .[dev]
-```
-
-## Test
-
-```bash
-pytest
-```
-
 ## Documentation
 
-Install docs dependencies:
+Local HTML docs can be built with:
 
-```bash
-pip install -e .[docs]
+```shell
+make docs
 ```
 
-Build HTML docs:
+## For developers
 
-```bash
-make -C docs html
+### Installation
+
+```shell
+git clone https://github.com/iijimahr/wind3d_field_lines.git
+cd wind3d_field_lines
+python -m venv venv
+. venv/bin/activate
+pip install -U pip && pip install -e ".[dev,docs]"
+```
+
+### Task automation with Makefile
+
+```shell
+make test         # Run lint, doctest, and unit tests
+make pytest       # Run unit tests
+make docs         # Build documentation
+make clean        # Clean build artifacts
 ```
