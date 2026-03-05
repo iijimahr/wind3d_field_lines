@@ -35,3 +35,4 @@ API Reference
    :maxdepth: 2
 
    api
+   demo_arcade

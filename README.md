@@ -22,6 +22,12 @@ python -m venv venv
 pip install -U pip && pip install -e ".[dev,docs]"
 ```
 
+To run the PyVista demo:
+
+```shell
+pip install -e ".[demo]"
+```
+
 ### Task automation with Makefile
 
 ```shell
@@ -30,6 +36,20 @@ make pytest       # Run unit tests
 make typecheck    # Run static type checking
 make docs         # Build documentation
 make clean        # Clean build artifacts
+```
+
+## Demo
+
+Run the arcade field-line visualization:
+
+```shell
+wind3d-arcade-demo
+```
+
+For headless rendering:
+
+```shell
+wind3d-arcade-demo --off-screen --screenshot arcade_field_demo.png
 ```
 
 ## CI/CD
