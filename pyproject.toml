@@ -13,11 +13,12 @@ name = "wind3d-field-lines"
 version = "0.1.0"
 description = "Magnetic field line tracer for wind3d data"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
+docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -27,3 +28,26 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+fix = true
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle error
+  "F",  # pyflakes
+  "I",  # isort
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade
+]
+ignore = [
+  "E203", # Black compatibility
+]
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+ignore_missing_imports = true
+files = ["src"]
