@@ -1,20 +1,20 @@
 # wind3d_field_lines
 
-wind3dデータの磁力線トレーサの初期実装です。
+Initial implementation of a magnetic field-line tracer for wind3d data.
 
-## 公開API（現段階）
+## Public API (Current Stage)
 
-- `trace_field_lines`: 磁力線トレース
-- `compute_open_field_fraction`: 開放磁場の面積充填率計算
-- `map_field_lines_to_height`: 観測高さへのフットポイント写像
+- `trace_field_lines`: Trace magnetic field lines
+- `compute_open_field_fraction`: Compute open-field area filling factors
+- `map_field_lines_to_height`: Map field-line footpoints to an observation height
 
-## 開発環境セットアップ
+## Development Setup
 
 ```bash
 pip install -e .[dev]
 ```
 
-## テスト
+## Test
 
 ```bash
 pytest

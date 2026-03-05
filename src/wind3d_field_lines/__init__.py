@@ -1,4 +1,4 @@
-"""wind3d_field_linesパッケージ。"""
+"""Public API for the wind3d_field_lines package."""
 
 from .integrator import (
     compute_open_field_fraction,

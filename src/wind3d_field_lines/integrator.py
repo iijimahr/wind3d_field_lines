@@ -23,14 +23,44 @@ def trace_field_lines(
     margin: int,
     nsubstepx: int = 3,
 ) -> FieldLineResult:
-    """f2py実装を用いて磁力線をトレースする。"""
+    """Trace magnetic field lines using the Fortran backend via f2py.
+
+    Parameters
+    ----------
+    bx, by, bz:
+        Magnetic field components with shape ``(ix, jx, kx)``.
+    dx, dy, dz:
+        Grid spacing profiles along the vertical index with shape ``(kx,)``.
+    icen_bln, jcen_bln, kcen_bln:
+        Per-line center coordinates with shape ``(nx_bln,)``.
+    lcen_bln:
+        1-based center index along the line coordinate.
+    lx_bln:
+        Number of points along each field line.
+    margin:
+        Number of ghost cells for periodic boundary handling.
+    nsubstepx:
+        Number of integration substeps per line segment.
+
+    Returns
+    -------
+    FieldLineResult
+        Traced line coordinates and valid index ranges.
+
+    Raises
+    ------
+    ValueError
+        If input shapes or scalar arguments are invalid.
+    ImportError
+        If the compiled Fortran extension is not available.
+    """
 
     bx64 = _as_float64_array("bx", bx, ndim=3)
     by64 = _as_float64_array("by", by, ndim=3)
     bz64 = _as_float64_array("bz", bz, ndim=3)
 
     if bx64.shape != by64.shape or bx64.shape != bz64.shape:
-        raise ValueError("bx, by, bz のshapeは一致する必要があります。")
+        raise ValueError("bx, by, and bz must have the same shape.")
 
     ix, jx, kx = bx64.shape
 
@@ -39,25 +69,25 @@ def trace_field_lines(
     dz64 = _as_float64_array("dz", dz, ndim=1)
 
     if dx64.shape != (kx,) or dy64.shape != (kx,) or dz64.shape != (kx,):
-        raise ValueError("dx, dy, dz のshapeは (kx,) である必要があります。")
+        raise ValueError("dx, dy, and dz must have shape (kx,).")
 
     icen64 = _as_float64_array("icen_bln", icen_bln, ndim=1)
     jcen64 = _as_float64_array("jcen_bln", jcen_bln, ndim=1)
     kcen64 = _as_float64_array("kcen_bln", kcen_bln, ndim=1)
 
     if not (icen64.shape == jcen64.shape == kcen64.shape):
-        raise ValueError("icen_bln, jcen_bln, kcen_bln のshapeは一致する必要があります。")
+        raise ValueError("icen_bln, jcen_bln, and kcen_bln must have the same shape.")
 
     nx_bln = icen64.shape[0]
 
     if lx_bln <= 0:
-        raise ValueError("lx_bln は1以上である必要があります。")
+        raise ValueError("lx_bln must be greater than 0.")
     if not (1 <= lcen_bln <= lx_bln):
-        raise ValueError("lcen_bln は 1 以上 lx_bln 以下である必要があります。")
+        raise ValueError("lcen_bln must satisfy 1 <= lcen_bln <= lx_bln.")
     if margin < 0:
-        raise ValueError("margin は0以上である必要があります。")
+        raise ValueError("margin must be non-negative.")
     if nsubstepx <= 0:
-        raise ValueError("nsubstepx は1以上である必要があります。")
+        raise ValueError("nsubstepx must be greater than 0.")
 
     i_bln = np.zeros((nx_bln, lx_bln), dtype=np.float64, order="F")
     j_bln = np.zeros((nx_bln, lx_bln), dtype=np.float64, order="F")
@@ -69,27 +99,27 @@ def trace_field_lines(
         from . import _bbtobln
     except ImportError as exc:
         raise ImportError(
-            "Fortran拡張の読み込みに失敗しました。`pip install -e .[dev]` を実行してください。"
+            "Failed to import the Fortran extension. Run `pip install -e '.[dev]'`."
         ) from exc
 
     _bbtobln.bbtobln(
-        i_bln,
-        j_bln,
-        k_bln,
-        lmin_bln,
-        lmax_bln,
-        int(lcen_bln),
-        np.asfortranarray(icen64),
-        np.asfortranarray(jcen64),
-        np.asfortranarray(kcen64),
-        np.asfortranarray(bx64),
-        np.asfortranarray(by64),
-        np.asfortranarray(bz64),
-        np.asfortranarray(dx64),
-        np.asfortranarray(dy64),
-        np.asfortranarray(dz64),
-        int(nsubstepx),
-        int(margin),
+        i_bln=i_bln,
+        j_bln=j_bln,
+        k_bln=k_bln,
+        lmin_bln=lmin_bln,
+        lmax_bln=lmax_bln,
+        lcen_bln=int(lcen_bln),
+        icen_bln=np.asfortranarray(icen64),
+        jcen_bln=np.asfortranarray(jcen64),
+        kcen_bln=np.asfortranarray(kcen64),
+        bx=np.asfortranarray(bx64),
+        by=np.asfortranarray(by64),
+        bz=np.asfortranarray(bz64),
+        dx=np.asfortranarray(dx64),
+        dy=np.asfortranarray(dy64),
+        dz=np.asfortranarray(dz64),
+        nsubstepx=int(nsubstepx),
+        margin=int(margin),
     )
 
     return FieldLineResult(
@@ -115,46 +145,72 @@ def compute_open_field_fraction(
     k_max: int,
     margin: int,
 ) -> OpenFieldResult:
-    """磁力線配列から開放磁場の面積充填率を計算する。"""
+    """Compute open-field area filling factors from traced field lines.
+
+    Parameters
+    ----------
+    i_bln, j_bln, k_bln:
+        Field-line coordinates with shape ``(nx_bln, lx_bln)``.
+    lmin_bln, lmax_bln:
+        Valid line-index bounds for each line with shape ``(nx_bln,)``.
+    bzt:
+        Vertical magnetic component used for normalization, shape ``(ix, jx, kx)``.
+    k_min, k_max:
+        Inclusive 1-based vertical index range where the filling factor is evaluated.
+    margin:
+        Number of ghost cells for periodic boundary handling.
+
+    Returns
+    -------
+    OpenFieldResult
+        Filled factor field ``f_opn`` with shape ``(ix, jx, kx)``.
+
+    Raises
+    ------
+    ValueError
+        If shapes or index bounds are invalid.
+    ImportError
+        If the compiled Fortran extension is not available.
+    """
 
     i64 = _as_float64_array("i_bln", i_bln, ndim=2)
     j64 = _as_float64_array("j_bln", j_bln, ndim=2)
     k64 = _as_float64_array("k_bln", k_bln, ndim=2)
     if i64.shape != j64.shape or i64.shape != k64.shape:
-        raise ValueError("i_bln, j_bln, k_bln のshapeは一致する必要があります。")
+        raise ValueError("i_bln, j_bln, and k_bln must have the same shape.")
     nx_bln, lx_bln = i64.shape
 
     lmin32 = _as_int32_array("lmin_bln", lmin_bln, ndim=1)
     lmax32 = _as_int32_array("lmax_bln", lmax_bln, ndim=1)
     if lmin32.shape != (nx_bln,) or lmax32.shape != (nx_bln,):
-        raise ValueError("lmin_bln, lmax_bln のshapeは (nx_bln,) である必要があります。")
+        raise ValueError("lmin_bln and lmax_bln must have shape (nx_bln,).")
 
     bzt64 = _as_float64_array("bzt", bzt, ndim=3)
     ix, jx, kx = bzt64.shape
     if not (1 <= k_min <= k_max <= kx):
-        raise ValueError("k_min, k_max は 1 <= k_min <= k_max <= kx を満たす必要があります。")
+        raise ValueError("k_min and k_max must satisfy 1 <= k_min <= k_max <= kx.")
     if margin < 0:
-        raise ValueError("margin は0以上である必要があります。")
+        raise ValueError("margin must be non-negative.")
 
     try:
         from . import _bbtobln
     except ImportError as exc:
         raise ImportError(
-            "Fortran拡張の読み込みに失敗しました。`pip install -e .[dev]` を実行してください。"
+            "Failed to import the Fortran extension. Run `pip install -e '.[dev]'`."
         ) from exc
 
     f_opn = np.zeros((ix, jx, kx), dtype=np.float64, order="F")
     _bbtobln.blntofopn(
-        f_opn,
-        np.asfortranarray(i64),
-        np.asfortranarray(j64),
-        np.asfortranarray(k64),
-        np.asfortranarray(lmin32),
-        np.asfortranarray(lmax32),
-        np.asfortranarray(bzt64),
-        int(k_min),
-        int(k_max),
-        int(margin),
+        f_opn=f_opn,
+        i_bln=np.asfortranarray(i64),
+        j_bln=np.asfortranarray(j64),
+        k_bln=np.asfortranarray(k64),
+        lmin_bln=np.asfortranarray(lmin32),
+        lmax_bln=np.asfortranarray(lmax32),
+        bzt=np.asfortranarray(bzt64),
+        k_min=int(k_min),
+        k_max=int(k_max),
+        margin=int(margin),
     )
     return OpenFieldResult(f_opn=f_opn)
 
@@ -168,28 +224,52 @@ def map_field_lines_to_height(
     lcen_bln: int,
     k_obs: int,
 ) -> ObservationMapResult:
-    """磁力線の中心高さから観測高さへのマッピングを計算する。"""
+    """Map field-line center points to a target observation height.
+
+    Parameters
+    ----------
+    i_bln, j_bln, k_bln:
+        Field-line coordinates with shape ``(nx_bln, lx_bln)``.
+    lmin_bln, lmax_bln:
+        Valid line-index bounds for each line with shape ``(nx_bln,)``.
+    lcen_bln:
+        1-based center index along the line coordinate.
+    k_obs:
+        1-based target vertical index for observation.
+
+    Returns
+    -------
+    ObservationMapResult
+        Arrays of mapped horizontal positions and vertical mismatch ``dk_obs``.
+
+    Raises
+    ------
+    ValueError
+        If input shapes or center index are invalid.
+    ImportError
+        If the compiled Fortran extension is not available.
+    """
 
     i64 = _as_float64_array("i_bln", i_bln, ndim=2)
     j64 = _as_float64_array("j_bln", j_bln, ndim=2)
     k64 = _as_float64_array("k_bln", k_bln, ndim=2)
     if i64.shape != j64.shape or i64.shape != k64.shape:
-        raise ValueError("i_bln, j_bln, k_bln のshapeは一致する必要があります。")
+        raise ValueError("i_bln, j_bln, and k_bln must have the same shape.")
     nx_bln, lx_bln = i64.shape
 
     lmin32 = _as_int32_array("lmin_bln", lmin_bln, ndim=1)
     lmax32 = _as_int32_array("lmax_bln", lmax_bln, ndim=1)
     if lmin32.shape != (nx_bln,) or lmax32.shape != (nx_bln,):
-        raise ValueError("lmin_bln, lmax_bln のshapeは (nx_bln,) である必要があります。")
+        raise ValueError("lmin_bln and lmax_bln must have shape (nx_bln,).")
 
     if not (1 <= lcen_bln <= lx_bln):
-        raise ValueError("lcen_bln は 1 以上 lx_bln 以下である必要があります。")
+        raise ValueError("lcen_bln must satisfy 1 <= lcen_bln <= lx_bln.")
 
     try:
         from . import _bbtobln
     except ImportError as exc:
         raise ImportError(
-            "Fortran拡張の読み込みに失敗しました。`pip install -e .[dev]` を実行してください。"
+            "Failed to import the Fortran extension. Run `pip install -e '.[dev]'`."
         ) from exc
 
     i_obs = np.zeros(nx_bln, dtype=np.float64, order="F")
@@ -197,16 +277,16 @@ def map_field_lines_to_height(
     dk_obs = np.zeros(nx_bln, dtype=np.float64, order="F")
 
     _bbtobln.blntobmap(
-        i_obs,
-        j_obs,
-        dk_obs,
-        np.asfortranarray(i64),
-        np.asfortranarray(j64),
-        np.asfortranarray(k64),
-        np.asfortranarray(lmin32),
-        np.asfortranarray(lmax32),
-        int(lcen_bln),
-        int(k_obs),
+        i_obs=i_obs,
+        j_obs=j_obs,
+        dk_obs=dk_obs,
+        i_bln=np.asfortranarray(i64),
+        j_bln=np.asfortranarray(j64),
+        k_bln=np.asfortranarray(k64),
+        lmin_bln=np.asfortranarray(lmin32),
+        lmax_bln=np.asfortranarray(lmax32),
+        lcen_bln=int(lcen_bln),
+        k_obs=int(k_obs),
     )
     return ObservationMapResult(i_obs=i_obs, j_obs=j_obs, dk_obs=dk_obs)
 
@@ -214,12 +294,12 @@ def map_field_lines_to_height(
 def _as_float64_array(name: str, value: Any, ndim: int) -> NDArray[np.float64]:
     arr = np.asarray(value, dtype=np.float64)
     if arr.ndim != ndim:
-        raise ValueError(f"{name} は{ndim}次元配列である必要があります。")
+        raise ValueError(f"{name} must be a {ndim}D array.")
     return arr
 
 
 def _as_int32_array(name: str, value: Any, ndim: int) -> NDArray[np.int32]:
     arr = np.asarray(value, dtype=np.int32)
     if arr.ndim != ndim:
-        raise ValueError(f"{name} は{ndim}次元配列である必要があります。")
+        raise ValueError(f"{name} must be a {ndim}D array.")
     return arr

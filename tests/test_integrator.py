@@ -37,7 +37,7 @@ def _build_uniform_case(dtype: type[np.floating]) -> tuple[np.ndarray, ...]:
 
 @pytest.mark.skipif(
     importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran拡張がビルドされていません。",
+    reason="Fortran extension is not built.",
 )
 def test_trace_uniform_vertical_field() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, kcen = _build_uniform_case(np.float64)
@@ -67,7 +67,7 @@ def test_trace_uniform_vertical_field() -> None:
 
 @pytest.mark.skipif(
     importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran拡張がビルドされていません。",
+    reason="Fortran extension is not built.",
 )
 def test_trace_boundary_clipping() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, _ = _build_uniform_case(np.float64)
@@ -94,7 +94,7 @@ def test_trace_boundary_clipping() -> None:
 
 @pytest.mark.skipif(
     importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran拡張がビルドされていません。",
+    reason="Fortran extension is not built.",
 )
 def test_float32_input_is_accepted() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, kcen = _build_uniform_case(np.float32)
@@ -144,14 +144,14 @@ def test_invalid_shape_raises_value_error() -> None:
 def test_import_extension_module() -> None:
     spec = importlib.util.find_spec("wind3d_field_lines._bbtobln")
     if spec is None:
-        pytest.skip("Fortran拡張がビルドされていません。")
+        pytest.skip("Fortran extension is not built.")
     mod = importlib.import_module("wind3d_field_lines._bbtobln")
     assert hasattr(mod, "bbtobln")
 
 
 @pytest.mark.skipif(
     importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran拡張がビルドされていません。",
+    reason="Fortran extension is not built.",
 )
 def test_compute_open_field_fraction() -> None:
     i_bln = np.full((1, 5), 4.0, dtype=np.float64)
@@ -180,7 +180,7 @@ def test_compute_open_field_fraction() -> None:
 
 @pytest.mark.skipif(
     importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran拡張がビルドされていません。",
+    reason="Fortran extension is not built.",
 )
 def test_map_field_lines_to_height() -> None:
     i_bln = np.array([[2.0, 2.0, 2.0, 2.0, 2.0]], dtype=np.float64)

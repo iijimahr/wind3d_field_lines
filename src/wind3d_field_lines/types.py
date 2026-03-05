@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 @dataclass(frozen=True)
 class FieldLineResult:
-    """磁力線トレース結果。"""
+    """Container for traced field-line coordinates and index bounds."""
 
     i: NDArray[np.float64]
     j: NDArray[np.float64]
@@ -22,14 +22,14 @@ class FieldLineResult:
 
 @dataclass(frozen=True)
 class OpenFieldResult:
-    """開放磁場の面積充填率。"""
+    """Container for open-field area filling factors."""
 
     f_opn: NDArray[np.float64]
 
 
 @dataclass(frozen=True)
 class ObservationMapResult:
-    """観測高さへのマッピング結果。"""
+    """Container for footpoint mapping results at an observation height."""
 
     i_obs: NDArray[np.float64]
     j_obs: NDArray[np.float64]
