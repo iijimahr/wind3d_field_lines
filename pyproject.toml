@@ -18,6 +18,7 @@ dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+docs = ["sphinx>=8.0"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

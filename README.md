@@ -17,3 +17,17 @@ pip install -e .[dev]
 ```bash
 pytest
 ```
+
+## Documentation
+
+Install docs dependencies:
+
+```bash
+pip install -e .[docs]
+```
+
+Build HTML docs:
+
+```bash
+make -C docs html
+```
