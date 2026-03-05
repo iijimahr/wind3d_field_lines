@@ -1,11 +1,17 @@
 [build-system]
-requires = ["setuptools>=69", "wheel", "numpy>=2.0", "meson>=1.5", "ninja>=1.11"]
+requires = [
+  "setuptools>=69",
+  "wheel",
+  "numpy>=2.0",
+  "meson>=1.5",
+  "ninja>=1.11",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "wind3d-field-lines"
 version = "0.1.0"
-description = "wind3dデータの磁力線トレーサ"
+description = "Magnetic field line tracer for wind3d data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["numpy>=2.0"]
@@ -14,7 +20,7 @@ dependencies = ["numpy>=2.0"]
 dev = ["pytest>=8.0", "ruff>=0.6"]
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
