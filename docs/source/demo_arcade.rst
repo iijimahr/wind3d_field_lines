@@ -72,7 +72,7 @@ directly, without any command-line call.
    dz_profile = np.full(z.size, dz)
 
    # Scatter 30 seed points randomly over the photospheric base (z = 0).
-   # Exclude |x| < 0.5 Mm near the polarity inversion line where Bz ~ 0.
+   # Exclude |x| < 0.5 near the polarity inversion line where Bz ~ 0.
    rng = np.random.default_rng(42)
    seed_x_raw = rng.uniform(-10.2, 10.2, 30)
    seed_x = np.where(np.abs(seed_x_raw) < 0.5, np.sign(seed_x_raw + 1e-9) * 0.5, seed_x_raw)
