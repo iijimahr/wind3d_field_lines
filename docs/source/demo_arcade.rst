@@ -149,7 +149,7 @@ Visualization
    :align: center
 
    Magnetic field lines of the linear force-free arcade (blue) traced from
-   12 randomly scattered seed points at the photospheric base (red dots).
+   30 randomly scattered seed points at the photospheric base (red dots).
    Coordinates are in Mm; field amplitude scale is 6 G.
 
 Notes

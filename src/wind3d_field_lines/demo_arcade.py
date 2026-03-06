@@ -28,7 +28,7 @@ class ArcadeDemoConfig:
     y_max: float = 40.0
     z_min: float = 0.0
     z_max: float = 65.0
-    seed_count: int = 12
+    seed_count: int = 30
     seed_rng_seed: int = 42
     lx_bln: int = 101
     lcen_bln: int = 51
