@@ -12,6 +12,7 @@ from wind3d_field_lines.potential_field import _thomas_solve
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _cartesian_h(n3: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return unit scale factors (Cartesian coordinates)."""
     ones = np.ones(n3)
@@ -30,6 +31,7 @@ def _make_grid(n1: int, n2: int, n3: int, l3: float):
 # Correctness tests
 # ---------------------------------------------------------------------------
 
+
 class TestCartesianUniformField:
     """Constant surface field => B3 = const, B1 = B2 = 0 everywhere."""
 
@@ -41,8 +43,13 @@ class TestCartesianUniformField:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         np.testing.assert_allclose(b3, 3.7, atol=1e-10)
@@ -55,8 +62,13 @@ class TestCartesianUniformField:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         np.testing.assert_allclose(b1, 0.0, atol=1e-10)
@@ -70,8 +82,13 @@ class TestCartesianUniformField:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         assert b1.shape == (n1, n2, n3)
@@ -98,16 +115,21 @@ class TestCartesianAnalyticalSingleMode:
         hxi, het, hzt = _cartesian_h(n3)
 
         dz = l3 / (n3 - 0.5)
-        xi3 = np.arange(n3) * dz                            # (n3,)
-        k1_phys = 2.0 * np.pi / (n1 * dxi)                 # fundamental mode
-        xi1 = np.arange(n1) * dxi                           # (n1,)
+        xi3 = np.arange(n3) * dz  # (n3,)
+        k1_phys = 2.0 * np.pi / (n1 * dxi)  # fundamental mode
+        xi1 = np.arange(n1) * dxi  # (n1,)
 
-        b3_bottom = np.sin(k1_phys * xi1)[:, None]          # (n1, 1)
+        b3_bottom = np.sin(k1_phys * xi1)[:, None]  # (n1, 1)
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         kappa = k1_phys
@@ -133,14 +155,21 @@ class TestFluxConservation:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         flux_bottom = b3_bottom.sum()
         for k in range(n3):
             np.testing.assert_allclose(
-                b3[:, :, k].sum(), flux_bottom, rtol=1e-10,
+                b3[:, :, k].sum(),
+                flux_bottom,
+                rtol=1e-10,
                 err_msg=f"Flux not conserved at level k={k}",
             )
 
@@ -164,8 +193,13 @@ class TestUpperBoundaryCondition:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         amp = np.abs(b3_bottom).max()
@@ -188,8 +222,13 @@ class TestPotentialCondition:
 
         b1, b2, b3 = compute_potential_field(
             b3_bottom=b3_bottom,
-            dxi=dxi, det=det, l3=l3, n3=n3,
-            hxi=hxi, het=het, hzt=hzt,
+            dxi=dxi,
+            det=det,
+            l3=l3,
+            n3=n3,
+            hxi=hxi,
+            het=het,
+            hzt=hzt,
         )
 
         # Estimate (curl B)_z = dB2/dxi1 - dB1/dxi2 in interior
@@ -198,10 +237,12 @@ class TestPotentialCondition:
         B2_fft = np.fft.fft2(b2, axes=(0, 1))
         k1 = 2.0 * np.pi * np.fft.fftfreq(n1) / dxi
         k2 = 2.0 * np.pi * np.fft.fftfreq(n2) / det
-        curl_z = np.real(np.fft.ifft2(
-            1j * k1[:, None, None] * B2_fft - 1j * k2[None, :, None] * B1_fft,
-            axes=(0, 1),
-        ))  # (n1, n2, n3)
+        curl_z = np.real(
+            np.fft.ifft2(
+                1j * k1[:, None, None] * B2_fft - 1j * k2[None, :, None] * B1_fft,
+                axes=(0, 1),
+            )
+        )  # (n1, n2, n3)
 
         amp = np.abs(b3_bottom).max()
         # Curl should be negligible compared to field amplitude
@@ -212,13 +253,19 @@ class TestPotentialCondition:
 # Input validation tests
 # ---------------------------------------------------------------------------
 
+
 class TestInputValidation:
     def _default_args(self):
         n1, n2, n3 = 4, 4, 8
         return dict(
             b3_bottom=np.ones((n1, n2)),
-            dxi=1.0, det=1.0, l3=5.0, n3=n3,
-            hxi=np.ones(n3), het=np.ones(n3), hzt=np.ones(n3),
+            dxi=1.0,
+            det=1.0,
+            l3=5.0,
+            n3=n3,
+            hxi=np.ones(n3),
+            het=np.ones(n3),
+            hzt=np.ones(n3),
         )
 
     def test_b3_bottom_not_2d(self):
@@ -272,6 +319,7 @@ class TestInputValidation:
 # _thomas_solve unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestThomasSolve:
     """Unit tests for the internal TDMA solver."""
 
@@ -290,9 +338,9 @@ class TestThomasSolve:
         # [2 -1] [x0]   [1]
         # [-1 3] [x1] = [2]
         lower = [0.0, -1.0]
-        diag  = [2.0,  3.0]
+        diag = [2.0, 3.0]
         upper = [-1.0, 0.0]
-        rhs   = [1.0, 2.0]
+        rhs = [1.0, 2.0]
 
         x = self._solve(lower, diag, upper, rhs)
 
@@ -306,8 +354,8 @@ class TestThomasSolve:
         # Build a diagonally dominant tridiagonal matrix.
         lower = np.concatenate([[0.0], rng.uniform(-1, 0, n - 1)])
         upper = np.concatenate([rng.uniform(-1, 0, n - 1), [0.0]])
-        diag  = -(np.abs(lower) + np.abs(upper)) - 1.0   # strictly dominant
-        rhs   = rng.standard_normal(n)
+        diag = -(np.abs(lower) + np.abs(upper)) - 1.0  # strictly dominant
+        rhs = rng.standard_normal(n)
 
         x = _thomas_solve(lower, diag, upper, rhs)
 
@@ -318,10 +366,10 @@ class TestThomasSolve:
     def test_identity_like_system(self):
         # Diagonal-only system: solution is rhs / diag.
         n = 8
-        diag  = np.full(n, 3.0)
+        diag = np.full(n, 3.0)
         lower = np.zeros(n)
         upper = np.zeros(n)
-        rhs   = np.arange(1.0, n + 1)
+        rhs = np.arange(1.0, n + 1)
 
         x = _thomas_solve(lower, diag, upper, rhs)
 
@@ -333,13 +381,13 @@ class TestThomasSolve:
         # Same matrix, multiple RHS vectors stacked in axis 0.
         n = 4
         lower = np.array([0.0, -1.0, -1.0, -1.0])
-        diag  = np.array([-3.0, -3.0, -3.0, -3.0])
-        upper = np.array([-1.0, -1.0, -1.0,  0.0])
+        diag = np.array([-3.0, -3.0, -3.0, -3.0])
+        upper = np.array([-1.0, -1.0, -1.0, 0.0])
         A = np.diag(diag) + np.diag(lower[1:], -1) + np.diag(upper[:-1], 1)
 
         rng = np.random.default_rng(1)
         batch = 5
-        rhs_batch = rng.standard_normal((batch, n))    # (5, n)
+        rhs_batch = rng.standard_normal((batch, n))  # (5, n)
 
         x_batch = _thomas_solve(
             lower=lower,
@@ -356,8 +404,8 @@ class TestThomasSolve:
         # Three-dimensional batch (m, n, system_size).
         n = 6
         lower = np.array([0.0, -0.5, -0.5, -0.5, -0.5, -0.5])
-        diag  = np.full(n, -2.0)
-        upper = np.array([-0.5, -0.5, -0.5, -0.5, -0.5,  0.0])
+        diag = np.full(n, -2.0)
+        upper = np.array([-0.5, -0.5, -0.5, -0.5, -0.5, 0.0])
         A = np.diag(diag) + np.diag(lower[1:], -1) + np.diag(upper[:-1], 1)
 
         rng = np.random.default_rng(2)
@@ -390,19 +438,19 @@ class TestThomasSolve:
         assert x.shape == (3, 5, n)
 
     def test_output_dtype_is_float64(self):
-        diag  = np.array([-2.0, -2.0])
+        diag = np.array([-2.0, -2.0])
         lower = np.zeros(2)
         upper = np.zeros(2)
-        rhs   = np.ones(2)
+        rhs = np.ones(2)
 
         x = _thomas_solve(lower, diag, upper, rhs)
         assert x.dtype == np.float64
 
     def test_does_not_modify_input_rhs(self):
-        diag  = np.array([-2.0, -3.0, -2.0])
+        diag = np.array([-2.0, -3.0, -2.0])
         lower = np.array([0.0, -0.5, -0.5])
-        upper = np.array([-0.5, -0.5,  0.0])
-        rhs   = np.array([1.0, 2.0, 3.0])
+        upper = np.array([-0.5, -0.5, 0.0])
+        rhs = np.array([1.0, 2.0, 3.0])
         rhs_copy = rhs.copy()
 
         _thomas_solve(lower, diag, upper, rhs)

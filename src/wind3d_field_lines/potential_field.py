@@ -100,26 +100,26 @@ def compute_potential_field(
     hzt_top = hzt64[-1]
 
     # Jacobian J = 1 / (h1 * h2 * h3)
-    J = 1.0 / (hxi64 * het64 * hzt64)                        # (n3,)
-    J_half = 1.0 / (hxi_half * het_half * hzt_half)          # (n3-1,)
-    J_neg = 1.0 / (hxi_neg * het_neg * hzt_neg)              # scalar
-    J_top = 1.0 / (hxi_top * het_top * hzt_top)              # scalar
+    J = 1.0 / (hxi64 * het64 * hzt64)  # (n3,)
+    J_half = 1.0 / (hxi_half * het_half * hzt_half)  # (n3-1,)
+    J_neg = 1.0 / (hxi_neg * het_neg * hzt_neg)  # scalar
+    J_top = 1.0 / (hxi_top * het_top * hzt_top)  # scalar
 
     # alpha_{k+1/2} = 1 / (dz^2 * J_{k+1/2} * h3_{k+1/2}^2)
-    alpha = 1.0 / (dz**2 * J_half * hzt_half**2)             # (n3-1,)
-    alpha_neg = 1.0 / (dz**2 * J_neg * hzt_neg**2)           # scalar
-    alpha_top = 1.0 / (dz**2 * J_top * hzt_top**2)           # scalar
+    alpha = 1.0 / (dz**2 * J_half * hzt_half**2)  # (n3-1,)
+    alpha_neg = 1.0 / (dz**2 * J_neg * hzt_neg**2)  # scalar
+    alpha_top = 1.0 / (dz**2 * J_top * hzt_top**2)  # scalar
 
     # --- Build tridiagonal coefficient arrays (geometry only, shape (n3,)) ---
     # lower[k] multiplies f_{k-1}.  lower[0] is unused (no ghost in equation).
     lower_geo = np.zeros(n3_i)
-    lower_geo[1:] = J[1:] * alpha                            # J_k * alpha_{k-1/2}
+    lower_geo[1:] = J[1:] * alpha  # J_k * alpha_{k-1/2}
 
     # upper[k] multiplies f_{k+1}.  upper[-1] is unused.
     upper_geo = np.zeros(n3_i)
     # k=0: ghost substitution merges f_{-1} = f_1 + 2*h3_0*dz into the f_1 term.
     upper_geo[0] = J[0] * (alpha[0] + alpha_neg)
-    upper_geo[1:-1] = J[1:-1] * alpha[1:]                   # J_k * alpha_{k+1/2}
+    upper_geo[1:-1] = J[1:-1] * alpha[1:]  # J_k * alpha_{k+1/2}
     # upper_geo[-1] = 0  (ghost f_{N3} = -f_{N3-1} absorbed into diagonal)
 
     # diag[k] = -(lower[k] + upper[k]) (before subtracting kappa^2)
@@ -134,14 +134,13 @@ def compute_potential_field(
     rhs_geo[0] = -2.0 * J[0] * alpha_neg * hzt64[0] * dz
 
     # --- Wavenumbers ---
-    k1 = 2.0 * np.pi * np.fft.fftfreq(n1) / dxi_f           # (n1,)
-    k2 = 2.0 * np.pi * np.fft.fftfreq(n2) / det_f           # (n2,)
+    k1 = 2.0 * np.pi * np.fft.fftfreq(n1) / dxi_f  # (n1,)
+    k2 = 2.0 * np.pi * np.fft.fftfreq(n2) / det_f  # (n2,)
 
     # kappa^2 = k1^2/h1^2 + k2^2/h2^2, shape (n1, n2, n3)
-    kappa2 = (
-        (k1[:, None, None] / hxi64[None, None, :]) ** 2
-        + (k2[None, :, None] / het64[None, None, :]) ** 2
-    )
+    kappa2 = (k1[:, None, None] / hxi64[None, None, :]) ** 2 + (
+        k2[None, :, None] / het64[None, None, :]
+    ) ** 2
 
     # Full diagonal: shape (n1, n2, n3)
     diag = diag_geo[None, None, :] - kappa2
@@ -165,8 +164,8 @@ def compute_potential_field(
     df_dz[:, :, -1] = (-f[:, :, -1] - f[:, :, -2]) / (2.0 * dz)
 
     # --- Magnetic field in wavenumber space ---
-    A = np.fft.fft2(b3b)                                     # (n1, n2)
-    Af = A[:, :, None] * f                                   # (n1, n2, n3)
+    A = np.fft.fft2(b3b)  # (n1, n2)
+    Af = A[:, :, None] * f  # (n1, n2, n3)
 
     B1_fft = -1j * k1[:, None, None] * Af
     B2_fft = -1j * k2[None, :, None] * Af
@@ -210,7 +209,7 @@ def _thomas_solve(
         Solution array with the same shape as ``rhs``.
     """
     n = rhs.shape[-1]
-    diag = np.array(diag, dtype=np.float64)   # working copy
+    diag = np.array(diag, dtype=np.float64)  # working copy
     rhs = rhs.copy()
 
     # Forward sweep
