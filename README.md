@@ -42,13 +42,6 @@ result = trace_field_lines_curvilinear(
 See the [Arcade Field Demo](https://iijimahr.github.io/wind3d_field_lines/demo_arcade.html)
 for a step-by-step example of tracing and visualizing magnetic field lines.
 
-```python
-from wind3d_field_lines.demo_arcade import ArcadeDemoConfig, run_demo
-
-run_demo(ArcadeDemoConfig())                          # interactive
-run_demo(ArcadeDemoConfig(output="arcade_demo.png"))  # save to file
-```
-
 ## For developers
 
 ### Installation
