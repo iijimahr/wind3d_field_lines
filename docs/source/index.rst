@@ -1,7 +1,7 @@
 wind3d_field_lines
 ==================
 
-Magnetic field-line tracer for wind3d data, backed by a Fortran extension.
+Magnetic field-line tracer for RAMENS wind3d data.
 
 Two tracing functions are provided:
 

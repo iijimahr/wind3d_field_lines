@@ -1,6 +1,6 @@
 # wind3d_field_lines
 
-Magnetic field-line tracer for wind3d data.
+Magnetic field-line tracer for RAMENS wind3d data.
 Supports both Cartesian grids (`trace_field_lines`) and orthogonal curvilinear
 coordinate systems (`trace_field_lines_curvilinear`).
 
