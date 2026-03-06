@@ -49,7 +49,7 @@ directly, without any command-line call.
 
    # Define a regular Cartesian grid (coordinates in Mm)
    x = np.linspace(-12.0, 12.0, 65)
-   y = np.linspace(-40.0, 40.0, 65)
+   y = np.linspace(-50.0, 50.0, 65)
    z = np.linspace(0.0, 65.0, 65)
 
    # Compute the analytic linear force-free arcade field
@@ -71,11 +71,13 @@ directly, without any command-line call.
    dy_profile = np.full(z.size, dy)
    dz_profile = np.full(z.size, dz)
 
-   # Scatter 12 seed points randomly over the photospheric base (z = 0)
+   # Scatter 30 seed points randomly over the photospheric base (z = 0).
+   # Exclude |x| < 0.5 Mm near the polarity inversion line where Bz ~ 0.
    rng = np.random.default_rng(42)
-   seed_x = rng.uniform(-10.0, 10.0, 12)
-   seed_y = rng.uniform(-24.0, 24.0, 12)
-   seed_z = np.zeros(12)
+   seed_x_raw = rng.uniform(-10.2, 10.2, 30)
+   seed_x = np.where(np.abs(seed_x_raw) < 0.5, np.sign(seed_x_raw + 1e-9) * 0.5, seed_x_raw)
+   seed_y = rng.uniform(-48.0, 48.0, 30)
+   seed_z = np.zeros(30)
 
    # Convert physical coordinates to 1-based grid indices
    icen = (seed_x - x[0]) / dx + 1.0
@@ -90,8 +92,8 @@ directly, without any command-line call.
        bx=bx, by=by, bz=bz,
        dx=dx_profile, dy=dy_profile, dz=dz_profile,
        icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-       lcen_bln=51,   # centre index along each traced line
-       lx_bln=101,    # total number of points per line
+       lcen_bln=151,  # centre index along each traced line
+       lx_bln=301,    # total number of points per line
    )
    # result.i/j/k  : traced grid indices, shape (n_seeds, lx_bln)
    # result.lmin/lmax : valid range for each line
@@ -149,8 +151,7 @@ Visualization
    :align: center
 
    Magnetic field lines of the linear force-free arcade (blue) traced from
-   30 randomly scattered seed points at the photospheric base (red dots).
-   Coordinates are in Mm; field amplitude scale is 6 G.
+   30 randomly scattered seed points at :math:`z = 0` (red dots).
 
 Notes
 -----
