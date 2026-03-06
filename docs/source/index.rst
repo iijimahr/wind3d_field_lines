@@ -87,5 +87,6 @@ API Reference
 
    api
    demo_arcade
+   demo_bipolar
    theory_curvilinear
    theory_potential_field
