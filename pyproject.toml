@@ -14,12 +14,11 @@ version = "0.1.0"
 description = "Magnetic field line tracer for wind3d data"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["numpy>=2.0"]
+dependencies = ["numpy>=2.0", "matplotlib>=3.8"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
 docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
-demo = ["matplotlib>=3.8"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

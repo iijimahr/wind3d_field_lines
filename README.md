@@ -24,12 +24,6 @@ python -m venv venv
 pip install -U pip && pip install -e ".[dev,docs]"
 ```
 
-To use the demo visualization (requires matplotlib):
-
-```shell
-pip install -e ".[demo]"
-```
-
 ### Task automation with Makefile
 
 ```shell
