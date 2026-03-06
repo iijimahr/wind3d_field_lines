@@ -34,10 +34,10 @@ class BipolarDemoConfig:
     # Seed / tracing parameters
     seed_count: int = 30
     seed_rng_seed: int = 42
-    lx_bln: int = 601
-    lcen_bln: int = 301
+    line_length: int = 601
+    line_center: int = 301
     margin: int = 0
-    nsubstepx: int = 3
+    n_substeps: int = 3
 
     # Output
     output: str | None = None
@@ -230,13 +230,13 @@ def run_demo(config: BipolarDemoConfig) -> None:
         dx=dx_profile,
         dy=dy_profile,
         dz=dz_profile,
-        icen_bln=icen,
-        jcen_bln=jcen,
-        kcen_bln=kcen,
-        lcen_bln=config.lcen_bln,
-        lx_bln=config.lx_bln,
+        seed_i=icen,
+        seed_j=jcen,
+        seed_k=kcen,
+        line_center=config.line_center,
+        line_length=config.line_length,
         margin=config.margin,
-        nsubstepx=config.nsubstepx,
+        n_substeps=config.n_substeps,
     )
 
     x_line = _to_physical(result.i, config.x_min, dxi)
@@ -250,9 +250,9 @@ def run_demo(config: BipolarDemoConfig) -> None:
     # Field lines — clip each traced line to the horizontal domain so that
     # periodic wrap-around artefacts are not plotted.
     valid_line_count = 0
-    for n in range(result.nx):
+    for n in range(result.num_lines):
         lmin = int(max(1, result.lmin[n]))
-        lmax = int(min(result.lx, result.lmax[n]))
+        lmax = int(min(result.line_length, result.lmax[n]))
         if lmax - lmin + 1 < 2:
             continue
 
@@ -262,7 +262,7 @@ def run_demo(config: BipolarDemoConfig) -> None:
         zv = z_line[n, sl]
 
         # Centre index within this slice
-        center = max(0, min(len(xv) - 1, config.lcen_bln - lmin))
+        center = max(0, min(len(xv) - 1, config.line_center - lmin))
         a, b = _domain_segment(
             xv,
             yv,
@@ -305,7 +305,7 @@ def run_demo(config: BipolarDemoConfig) -> None:
         "Demo summary: "
         f"grid=({config.nx}, {config.ny}, {config.nz}), "
         f"seeds={config.seed_count}, "
-        f"valid_lines={valid_line_count}/{result.nx}, "
+        f"valid_lines={valid_line_count}/{result.num_lines}, "
         f"l-range=[{int(result.lmin.min())}, {int(result.lmax.max())}]"
     )
 

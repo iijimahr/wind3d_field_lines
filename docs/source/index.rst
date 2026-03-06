@@ -41,10 +41,10 @@ Cartesian grid:
    result = trace_field_lines(
        bx=bx, by=by, bz=bz,
        dx=dx_profile, dy=dy_profile, dz=dz_profile,
-       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-       lcen_bln=151, lx_bln=301, margin=0,
+       seed_i=icen, seed_j=jcen, seed_k=kcen,
+       line_center=151, line_length=301, margin=0,
    )
-   # result.i/j/k : traced grid indices, shape (n_seeds, lx_bln)
+   # result.i/j/k : traced grid indices, shape (n_seeds, line_length)
 
 Orthogonal curvilinear coordinates:
 
@@ -53,13 +53,13 @@ Orthogonal curvilinear coordinates:
    from wind3d_field_lines import trace_field_lines_curvilinear
 
    result = trace_field_lines_curvilinear(
-       bxi=bxi, bet=bet, bzt=bzt,
+       b_xi=b_xi, b_et=b_et, b_zt=b_zt,
        dxi=dxi, det=det, dzt=dzt,
        hxi=hxi, het=het, hzt=hzt,
-       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-       lcen_bln=151, lx_bln=301, margin=0,
+       seed_i=icen, seed_j=jcen, seed_k=kcen,
+       line_center=151, line_length=301, margin=0,
    )
-   # result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
+   # result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, line_length)
 
 Potential field extrapolation:
 

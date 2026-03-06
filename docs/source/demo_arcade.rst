@@ -91,11 +91,12 @@ directly, without any command-line call.
    result = trace_field_lines(
        bx=bx, by=by, bz=bz,
        dx=dx_profile, dy=dy_profile, dz=dz_profile,
-       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-       lcen_bln=151,  # centre index along each traced line
-       lx_bln=301,    # total number of points per line
+       seed_i=icen, seed_j=jcen, seed_k=kcen,
+       line_center=151,  # centre index along each traced line
+       line_length=301,    # total number of points per line
+       margin=0,
    )
-   # result.i/j/k  : traced grid indices, shape (n_seeds, lx_bln)
+   # result.i/j/k  : traced grid indices, shape (n_seeds, line_length)
    # result.lmin/lmax : valid range for each line
 
 **4. Visualize with matplotlib**
@@ -112,9 +113,9 @@ directly, without any command-line call.
    fig = plt.figure(figsize=(9, 7))
    ax = fig.add_subplot(111, projection="3d")
 
-   for n in range(result.nx):
+   for n in range(result.num_lines):
        lmin = int(max(1, result.lmin[n]))
-       lmax = int(min(result.lx, result.lmax[n]))
+       lmax = int(min(result.line_length, result.lmax[n]))
        if lmax - lmin + 1 < 2:
            continue
        ax.plot(
