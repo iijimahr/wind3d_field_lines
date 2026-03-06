@@ -203,11 +203,19 @@ def run_demo(config: BipolarDemoConfig) -> None:
     dy_profile = np.full(config.nz, det, dtype=np.float64)
     dz_profile = np.full(config.nz, dz_step, dtype=np.float64)
 
-    # --- Seed points scattered over the positive polarity spot at z = 0 ---
-    # Use a 2-D Gaussian distribution centred on the positive spot (x = +spot_distance)
+    # --- Seed points scattered over both polarity spots at z = 0 ---
+    # Split seed_count evenly between positive (x = +spot_distance) and
+    # negative (x = -spot_distance) spots, each drawn from a 2-D Gaussian
     # with standard deviation equal to the spot width sigma.
     rng = np.random.default_rng(config.seed_rng_seed)
-    seed_x = rng.normal(config.spot_distance, config.sigma, config.seed_count)
+    n_pos = config.seed_count // 2
+    n_neg = config.seed_count - n_pos
+    seed_x = np.concatenate(
+        [
+            rng.normal(config.spot_distance, config.sigma, n_pos),
+            rng.normal(-config.spot_distance, config.sigma, n_neg),
+        ]
+    )
     seed_y = rng.normal(0.0, config.sigma, config.seed_count)
     seed_z = np.zeros(config.seed_count, dtype=np.float64)
 
