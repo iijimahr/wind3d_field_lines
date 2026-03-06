@@ -9,6 +9,14 @@ Integrator
    :undoc-members:
    :show-inheritance:
 
+Potential Field
+---------------
+
+.. automodule:: wind3d_field_lines.potential_field
+   :members: compute_potential_field
+   :undoc-members:
+   :show-inheritance:
+
 Types
 -----
 
