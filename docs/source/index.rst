@@ -22,24 +22,9 @@ This package is under active development for research and learning purposes.
 Installation
 ============
 
-To install the package in editable mode:
-
 .. code-block:: bash
 
-   pip install -e ".[dev,docs]"
-
-Examples
-========
-
-Basic import:
-
-.. doctest::
-
-   >>> import wind3d_field_lines as wfl
-   >>> hasattr(wfl, "trace_field_lines")
-   True
-   >>> hasattr(wfl, "trace_field_lines_curvilinear")
-   True
+   pip install -e .
 
 API Reference
 =============
