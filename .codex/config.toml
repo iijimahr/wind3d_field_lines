@@ -1,0 +1,4 @@
+model = "gpt-5.3-codex"
+personality = "friendly"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
