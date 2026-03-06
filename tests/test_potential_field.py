@@ -8,7 +8,6 @@ import pytest
 from wind3d_field_lines import compute_potential_field
 from wind3d_field_lines.potential_field import _thomas_solve
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -92,7 +91,7 @@ class TestCartesianAnalyticalSingleMode:
 
     @pytest.mark.parametrize("n3", [32, 64])
     def test_b3_matches_analytical(self, n3: int):
-        n1, n2 = 32, 1
+        n1 = 32
         l3 = 20.0
         dxi = 1.0
         det = 1.0
@@ -183,7 +182,6 @@ class TestPotentialCondition:
         dxi = 1.0
         det = 1.0
         hxi, het, hzt = _cartesian_h(n3)
-        dz = l3 / (n3 - 0.5)
 
         rng = np.random.default_rng(99)
         b3_bottom = rng.standard_normal((n1, n2))
