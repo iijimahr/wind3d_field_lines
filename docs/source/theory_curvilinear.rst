@@ -139,6 +139,8 @@ API
 ---
 
 .. autofunction:: wind3d_field_lines.trace_field_lines_curvilinear
+   :noindex:
 
 .. autoclass:: wind3d_field_lines.CurvilinearFieldLineResult
    :members:
+   :noindex:
