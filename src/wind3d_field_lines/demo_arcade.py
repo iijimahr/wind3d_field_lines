@@ -1,3 +1,5 @@
+"""Linear force-free arcade field demo with matplotlib 3D visualization."""
+
 from __future__ import annotations
 
 import argparse
@@ -37,8 +39,7 @@ class ArcadeDemoConfig:
     lcen_bln: int = 51
     margin: int = 0
     nsubstepx: int = 3
-    off_screen: bool = False
-    screenshot: str | None = None
+    output: str | None = None
 
 
 def build_arcade_field(
@@ -50,8 +51,35 @@ def build_arcade_field(
     y: NDArray[np.float64],
     z: NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
-    """Build linear force-free arcade field components on a regular grid."""
+    """Build linear force-free arcade field components on a regular grid.
 
+    Parameters
+    ----------
+    ba:
+        Field strength scale [G].
+    la:
+        Arcade half-width scale [Mm].
+    decay_a:
+        Vertical decay length [Mm].
+    x:
+        1-D array of x coordinates [Mm].
+    y:
+        1-D array of y coordinates [Mm].
+    z:
+        1-D array of z coordinates [Mm].
+
+    Returns
+    -------
+    tuple of (bx, by, bz)
+        Magnetic field components on the 3-D grid, each with shape
+        ``(nx, ny, nz)``.
+
+    Raises
+    ------
+    ValueError
+        If ``la`` or ``decay_a`` are non-positive, or if
+        ``2*la / (pi*decay_a) > 1``.
+    """
     if la <= 0.0:
         raise ValueError("la must be positive.")
     if decay_a <= 0.0:
@@ -99,14 +127,23 @@ def _to_physical(
 
 
 def run_demo(config: ArcadeDemoConfig) -> int:
-    """Run tracing and visualize field lines with PyVista."""
+    """Trace field lines and visualize with matplotlib 3D.
 
-    try:
-        import pyvista as pv
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "pyvista is required for the demo. Install with: pip install -e '.[demo]'"
-        ) from exc
+    Parameters
+    ----------
+    config:
+        Demo configuration parameters.
+
+    Returns
+    -------
+    int
+        Exit code (0 on success).
+    """
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    if config.output is not None:
+        matplotlib.use("Agg")
 
     x = np.linspace(config.x_min, config.x_max, config.nx, dtype=np.float64)
     y = np.linspace(config.y_min, config.y_max, config.ny, dtype=np.float64)
@@ -157,8 +194,8 @@ def run_demo(config: ArcadeDemoConfig) -> int:
     y_line = _to_physical(result.j, config.y_min, dy_step)
     z_line = _to_physical(result.k, config.z_min, dz_step)
 
-    plotter = pv.Plotter(off_screen=config.off_screen)
-    plotter.set_background("white")
+    fig = plt.figure(figsize=(9, 7))
+    ax = fig.add_subplot(111, projection="3d")
 
     valid_line_count = 0
     for n in range(result.nx):
@@ -167,32 +204,29 @@ def run_demo(config: ArcadeDemoConfig) -> int:
         if lmax - lmin + 1 < 2:
             continue
 
-        points = np.column_stack(
-            (
-                x_line[n, lmin - 1 : lmax],
-                y_line[n, lmin - 1 : lmax],
-                z_line[n, lmin - 1 : lmax],
-            )
+        ax.plot(
+            x_line[n, lmin - 1 : lmax],
+            y_line[n, lmin - 1 : lmax],
+            z_line[n, lmin - 1 : lmax],
+            color="royalblue",
+            linewidth=1.2,
         )
-        line = pv.lines_from_points(points, close=False)
-        plotter.add_mesh(line, color="royalblue", line_width=4)
         valid_line_count += 1
 
-    seeds = np.column_stack((seed_x, seed_y, seed_z))
-    plotter.add_points(
-        seeds,
+    ax.scatter(
+        seed_x,
+        seed_y,
+        seed_z,
         color="crimson",
-        point_size=11,
-        render_points_as_spheres=True,
+        s=40,
+        zorder=5,
+        label="Seed points",
     )
 
-    plotter.add_axes()
-    plotter.show_grid(xlabel="x [Mm]", ylabel="y [Mm]", zlabel="z [Mm]")
-    plotter.add_title("Linear force-free arcade field-line demo")
-
-    screenshot = config.screenshot
-    if config.off_screen and screenshot is None:
-        screenshot = "arcade_field_demo.png"
+    ax.set_xlabel("x [Mm]")
+    ax.set_ylabel("y [Mm]")
+    ax.set_zlabel("z [Mm]")
+    ax.set_title("Linear force-free arcade field lines")
 
     print(
         "Demo summary: "
@@ -202,105 +236,93 @@ def run_demo(config: ArcadeDemoConfig) -> int:
         f"l-range=[{int(result.lmin.min())}, {int(result.lmax.max())}]"
     )
 
-    if screenshot is not None:
-        plotter.show(screenshot=screenshot)
-        print(f"Saved visualization to: {screenshot}")
+    if config.output is not None:
+        out_path = Path(config.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=150, bbox_inches="tight")
+        print(f"Saved visualization to: {out_path}")
     else:
-        plotter.show()
+        plt.show()
 
+    plt.close(fig)
     return 0
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Visualize traced arcade magnetic field lines with PyVista."
+        description=(
+            "Build a linear force-free arcade magnetic field and save it to a .npz file."
+        )
     )
     parser.add_argument(
-        "--ba", type=float, default=6.0, help="Field strength scale Ba."
+        "--ba", type=float, default=6.0, help="Field strength scale Ba [G]."
     )
     parser.add_argument(
-        "--la", type=float, default=12.0, help="Arcade half-width scale La."
+        "--la", type=float, default=12.0, help="Arcade half-width scale La [Mm]."
     )
     parser.add_argument(
-        "--decay-a", type=float, default=30.0, help="Vertical decay length a."
+        "--decay-a", type=float, default=30.0, help="Vertical decay length a [Mm]."
     )
     parser.add_argument("--nx", type=int, default=65, help="Number of x-grid points.")
     parser.add_argument("--ny", type=int, default=65, help="Number of y-grid points.")
     parser.add_argument("--nz", type=int, default=65, help="Number of z-grid points.")
     parser.add_argument(
-        "--seed-count", type=int, default=9, help="Number of seed points."
-    )
-    parser.add_argument("--seed-xmin", type=float, default=-8.0, help="Min seed x.")
-    parser.add_argument("--seed-xmax", type=float, default=8.0, help="Max seed x.")
-    parser.add_argument("--seed-y", type=float, default=0.0, help="Seed y coordinate.")
-    parser.add_argument("--seed-z", type=float, default=0.0, help="Seed z coordinate.")
-    parser.add_argument(
-        "--lx-bln",
-        type=int,
-        default=101,
-        help="Number of points along each field line.",
+        "--x-min", type=float, default=-12.0, help="Grid x minimum [Mm]."
     )
     parser.add_argument(
-        "--lcen-bln", type=int, default=51, help="Center index along each field line."
-    )
-    parser.add_argument("--margin", type=int, default=0, help="Ghost-cell margin.")
-    parser.add_argument(
-        "--nsubstepx", type=int, default=3, help="Integration substeps per segment."
+        "--x-max", type=float, default=12.0, help="Grid x maximum [Mm]."
     )
     parser.add_argument(
-        "--off-screen",
-        action="store_true",
-        help="Enable off-screen rendering (useful for headless environments).",
+        "--y-min", type=float, default=-40.0, help="Grid y minimum [Mm]."
     )
     parser.add_argument(
-        "--screenshot",
+        "--y-max", type=float, default=40.0, help="Grid y maximum [Mm]."
+    )
+    parser.add_argument(
+        "--z-min", type=float, default=0.0, help="Grid z minimum [Mm]."
+    )
+    parser.add_argument(
+        "--z-max", type=float, default=65.0, help="Grid z maximum [Mm]."
+    )
+    parser.add_argument(
+        "--output",
         type=str,
-        default=None,
-        help=(
-            "Screenshot output path. "
-            "If omitted with --off-screen, defaults to arcade_field_demo.png."
-        ),
+        required=True,
+        help="Output .npz file path for the field data.",
     )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """Entry point for the wind3d-build-arcade-field command.
+
+    Builds a linear force-free arcade magnetic field on a regular grid and
+    saves the result to a NumPy ``.npz`` file containing arrays ``x``, ``y``,
+    ``z``, ``bx``, ``by``, and ``bz``.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv)
 
-    config = ArcadeDemoConfig(
+    x = np.linspace(args.x_min, args.x_max, args.nx, dtype=np.float64)
+    y = np.linspace(args.y_min, args.y_max, args.ny, dtype=np.float64)
+    z = np.linspace(args.z_min, args.z_max, args.nz, dtype=np.float64)
+
+    bx, by, bz = build_arcade_field(
         ba=args.ba,
         la=args.la,
         decay_a=args.decay_a,
-        nx=args.nx,
-        ny=args.ny,
-        nz=args.nz,
-        seed_count=args.seed_count,
-        seed_x_min=args.seed_xmin,
-        seed_x_max=args.seed_xmax,
-        seed_y=args.seed_y,
-        seed_z=args.seed_z,
-        lx_bln=args.lx_bln,
-        lcen_bln=args.lcen_bln,
-        margin=args.margin,
-        nsubstepx=args.nsubstepx,
-        off_screen=args.off_screen,
-        screenshot=args.screenshot,
+        x=x,
+        y=y,
+        z=z,
     )
 
-    if config.seed_count <= 0:
-        parser.error("--seed-count must be greater than 0.")
-    if config.lx_bln <= 0:
-        parser.error("--lx-bln must be greater than 0.")
-    if not (1 <= config.lcen_bln <= config.lx_bln):
-        parser.error("--lcen-bln must satisfy 1 <= lcen-bln <= lx-bln.")
-
-    if config.screenshot is not None:
-        out_path = Path(config.screenshot)
-        if out_path.parent != Path("."):
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    return run_demo(config)
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez(out_path, x=x, y=y, z=z, bx=bx, by=by, bz=bz)
+    print(f"Saved arcade field to: {out_path}")
+    print(f"  grid: ({args.nx}, {args.ny}, {args.nz})")
+    print(f"  ba={args.ba} G, la={args.la} Mm, decay_a={args.decay_a} Mm")
+    return 0
 
 
 if __name__ == "__main__":
