@@ -6,7 +6,7 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from .types import FieldLineResult
+from .types import CurvilinearFieldLineResult, FieldLineResult
 
 
 def trace_field_lines(
@@ -132,6 +132,132 @@ def trace_field_lines(
         lcen=int(lcen_bln),
         nx=int(nx_bln),
         lx=int(lx_bln),
+    )
+
+
+def trace_field_lines_curvilinear(
+    bxi: NDArray[np.floating[Any]],
+    bet: NDArray[np.floating[Any]],
+    bzt: NDArray[np.floating[Any]],
+    dxi: float,
+    det: float,
+    dzt: float,
+    hxi: NDArray[np.floating[Any]],
+    het: NDArray[np.floating[Any]],
+    hzt: NDArray[np.floating[Any]],
+    icen_bln: NDArray[np.floating[Any]],
+    jcen_bln: NDArray[np.floating[Any]],
+    kcen_bln: NDArray[np.floating[Any]],
+    lcen_bln: int,
+    lx_bln: int,
+    margin: int,
+    nsubstepx: int = 3,
+) -> CurvilinearFieldLineResult:
+    """Trace magnetic field lines in an orthogonal curvilinear coordinate system.
+
+    The field-line tracing problem in orthogonal curvilinear coordinates reduces
+    to the standard Cartesian streamline problem after scaling the magnetic field
+    components by products of the scale factors.  See the theory documentation
+    for the derivation.
+
+    Parameters
+    ----------
+    bxi, bet, bzt:
+        Physical components of the magnetic field (B_xi, B_eta, B_zeta) with
+        shape ``(ix, jx, kx)``.
+    dxi, det, dzt:
+        Uniform grid spacing in the xi, eta, and zeta directions (scalars).
+    hxi, het, hzt:
+        Scale factors h_xi, h_eta, h_zeta with shape ``(kx,)``.  Each scale
+        factor may depend on the zeta index only.
+    icen_bln, jcen_bln, kcen_bln:
+        Per-line seed coordinates as 1-based grid indices with shape
+        ``(nx_bln,)``.
+    lcen_bln:
+        1-based center index along the line coordinate.
+    lx_bln:
+        Number of points along each field line.
+    margin:
+        Number of ghost cells for periodic boundary handling.
+    nsubstepx:
+        Number of integration substeps per line segment.
+
+    Returns
+    -------
+    CurvilinearFieldLineResult
+        Traced field-line coordinates in physical (xi, eta, zeta) space and
+        valid index ranges.
+
+    Raises
+    ------
+    ValueError
+        If input shapes or scalar arguments are invalid.
+    ImportError
+        If the compiled Fortran extension is not available.
+    """
+
+    bxi64 = _as_float64_array("bxi", bxi, ndim=3)
+    bet64 = _as_float64_array("bet", bet, ndim=3)
+    bzt64 = _as_float64_array("bzt", bzt, ndim=3)
+
+    if bxi64.shape != bet64.shape or bxi64.shape != bzt64.shape:
+        raise ValueError("bxi, bet, and bzt must have the same shape.")
+
+    ix, jx, kx = bxi64.shape
+
+    hxi64 = _as_float64_array("hxi", hxi, ndim=1)
+    het64 = _as_float64_array("het", het, ndim=1)
+    hzt64 = _as_float64_array("hzt", hzt, ndim=1)
+
+    if hxi64.shape != (kx,) or het64.shape != (kx,) or hzt64.shape != (kx,):
+        raise ValueError("hxi, het, and hzt must have shape (kx,).")
+
+    if np.any(hxi64 <= 0) or np.any(het64 <= 0) or np.any(hzt64 <= 0):
+        raise ValueError("hxi, het, and hzt must be positive.")
+
+    dxi_f = float(dxi)
+    det_f = float(det)
+    dzt_f = float(dzt)
+
+    if dxi_f <= 0 or det_f <= 0 or dzt_f <= 0:
+        raise ValueError("dxi, det, and dzt must be positive.")
+
+    # Scale the magnetic field components.
+    # From the theory: B_tilde_xi = h_eta * h_zeta * B_xi, etc.
+    # hxi64 has shape (kx,) and broadcasts against bxi64 of shape (ix, jx, kx).
+    b_tilde_xi = bxi64 * (het64 * hzt64)
+    b_tilde_eta = bet64 * (hzt64 * hxi64)
+    b_tilde_zet = bzt64 * (hxi64 * het64)
+
+    dx_arr = np.full(kx, dxi_f)
+    dy_arr = np.full(kx, det_f)
+    dz_arr = np.full(kx, dzt_f)
+
+    raw = trace_field_lines(
+        bx=b_tilde_xi,
+        by=b_tilde_eta,
+        bz=b_tilde_zet,
+        dx=dx_arr,
+        dy=dy_arr,
+        dz=dz_arr,
+        icen_bln=icen_bln,
+        jcen_bln=jcen_bln,
+        kcen_bln=kcen_bln,
+        lcen_bln=lcen_bln,
+        lx_bln=lx_bln,
+        margin=margin,
+        nsubstepx=nsubstepx,
+    )
+
+    return CurvilinearFieldLineResult(
+        xi=(raw.i - 1.0) * dxi_f,
+        eta=(raw.j - 1.0) * det_f,
+        zeta=(raw.k - 1.0) * dzt_f,
+        lmin=raw.lmin,
+        lmax=raw.lmax,
+        lcen=raw.lcen,
+        nx=raw.nx,
+        lx=raw.lx,
     )
 
 

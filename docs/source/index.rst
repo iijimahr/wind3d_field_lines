@@ -27,6 +27,8 @@ Basic import:
    >>> import wind3d_field_lines as wfl
    >>> hasattr(wfl, "trace_field_lines")
    True
+   >>> hasattr(wfl, "trace_field_lines_curvilinear")
+   True
 
 API Reference
 =============
@@ -36,3 +38,4 @@ API Reference
 
    api
    demo_arcade
+   theory_curvilinear

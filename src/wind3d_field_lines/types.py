@@ -18,3 +18,22 @@ class FieldLineResult:
     lcen: int
     nx: int
     lx: int
+
+
+@dataclass(frozen=True)
+class CurvilinearFieldLineResult:
+    """Container for traced field-line coordinates in curvilinear coordinate space.
+
+    Coordinates are returned as physical values in the (xi, eta, zeta) space.
+    Field-line tracing is performed using scaled magnetic field components as
+    described in the orthogonal curvilinear coordinates theory.
+    """
+
+    xi: NDArray[np.float64]
+    eta: NDArray[np.float64]
+    zeta: NDArray[np.float64]
+    lmin: NDArray[np.int32]
+    lmax: NDArray[np.int32]
+    lcen: int
+    nx: int
+    lx: int

@@ -22,7 +22,7 @@ python -m venv venv
 pip install -U pip && pip install -e ".[dev,docs]"
 ```
 
-To run the PyVista demo:
+To use the demo visualization (requires matplotlib):
 
 ```shell
 pip install -e ".[demo]"
@@ -40,16 +40,17 @@ make clean        # Clean build artifacts
 
 ## Demo
 
-Run the arcade field-line visualization:
+See the [Arcade Field Demo](https://iijimahr.github.io/wind3d_field_lines/demo_arcade.html)
+page in the documentation for a step-by-step example of tracing and
+visualizing magnetic field lines.
 
-```shell
-wind3d-arcade-demo
-```
+Quick start:
 
-For headless rendering:
+```python
+from wind3d_field_lines.demo_arcade import ArcadeDemoConfig, run_demo
 
-```shell
-wind3d-arcade-demo --off-screen --screenshot arcade_field_demo.png
+run_demo(ArcadeDemoConfig())                          # interactive
+run_demo(ArcadeDemoConfig(output="arcade_demo.png"))  # save to file
 ```
 
 ## CI/CD
