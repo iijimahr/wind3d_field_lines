@@ -230,9 +230,9 @@ def run_demo(config: ArcadeDemoConfig) -> int:
         label="Seed points",
     )
 
-    ax.set_xlabel("x [Mm]")
-    ax.set_ylabel("y [Mm]")
-    ax.set_zlabel("z [Mm]")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
     ax.set_title("Linear force-free arcade field lines")
 
     print(
