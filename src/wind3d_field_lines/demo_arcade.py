@@ -24,14 +24,14 @@ class ArcadeDemoConfig:
     nz: int = 65
     x_min: float = -12.0
     x_max: float = 12.0
-    y_min: float = -40.0
-    y_max: float = 40.0
+    y_min: float = -50.0
+    y_max: float = 50.0
     z_min: float = 0.0
     z_max: float = 65.0
     seed_count: int = 30
     seed_rng_seed: int = 42
-    lx_bln: int = 201
-    lcen_bln: int = 101
+    lx_bln: int = 301
+    lcen_bln: int = 151
     margin: int = 0
     nsubstepx: int = 3
     output: str | None = None
@@ -165,7 +165,7 @@ def run_demo(config: ArcadeDemoConfig) -> int:
     # Avoid |x| < 0.5 Mm near the polarity inversion line where Bz ~ 0.
     rng = np.random.default_rng(config.seed_rng_seed)
     x_half = config.x_max * 0.85
-    y_half = config.y_max * 0.6
+    y_half = config.y_max * 0.96
     seed_x_raw = rng.uniform(-x_half, x_half, config.seed_count)
     # Nudge seeds very close to the PIL away from it so tracing is meaningful.
     pil_margin = 0.5
