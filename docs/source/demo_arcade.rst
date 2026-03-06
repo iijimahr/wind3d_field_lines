@@ -47,7 +47,7 @@ directly, without any command-line call.
    import numpy as np
    from wind3d_field_lines.demo_arcade import build_arcade_field
 
-   # Define a regular Cartesian grid (coordinates in Mm)
+   # Define a regular Cartesian grid
    x = np.linspace(-12.0, 12.0, 65)
    y = np.linspace(-50.0, 50.0, 65)
    z = np.linspace(0.0, 65.0, 65)
@@ -125,9 +125,9 @@ directly, without any command-line call.
        )
 
    ax.scatter(seed_x, seed_y, seed_z, color="crimson", s=40)
-   ax.set_xlabel("x [Mm]")
-   ax.set_ylabel("y [Mm]")
-   ax.set_zlabel("z [Mm]")
+   ax.set_xlabel("x")
+   ax.set_ylabel("y")
+   ax.set_zlabel("z")
    ax.set_title("Linear force-free arcade field lines")
    plt.show()
 
