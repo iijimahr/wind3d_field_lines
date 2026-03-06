@@ -3,6 +3,7 @@
 Magnetic field-line tracer for RAMENS wind3d data.
 Supports both Cartesian grids (`trace_field_lines`) and orthogonal curvilinear
 coordinate systems (`trace_field_lines_curvilinear`).
+Also provides potential magnetic field extrapolation (`compute_potential_field`).
 
 Published docs: <https://iijimahr.github.io/wind3d_field_lines/>
 
@@ -35,6 +36,26 @@ result = trace_field_lines_curvilinear(
     lcen_bln=151, lx_bln=301, margin=0,
 )
 # result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
+```
+
+Potential field extrapolation:
+
+```python
+from wind3d_field_lines import compute_potential_field
+import numpy as np
+
+n1, n2, n3 = 64, 64, 32
+l3 = 20.0  # domain height [Mm]
+
+# Surface normal field (lower boundary)
+b3_bottom = ...  # shape (n1, n2)
+
+b1, b2, b3 = compute_potential_field(
+    b3_bottom=b3_bottom,
+    dxi=1.0, det=1.0, l3=l3, n3=n3,
+    hxi=np.ones(n3), het=np.ones(n3), hzt=np.ones(n3),  # Cartesian
+)
+# b1/b2/b3 : magnetic field components, shape (n1, n2, n3)
 ```
 
 ## Demo
