@@ -4,42 +4,13 @@ Magnetic field-line tracer for wind3d data.
 Supports both Cartesian grids (`trace_field_lines`) and orthogonal curvilinear
 coordinate systems (`trace_field_lines_curvilinear`).
 
-## Documentation
-
-Local HTML docs can be built with:
-
-```shell
-make docs
-```
-
-## For developers
-
-### Installation
-
-```shell
-git clone https://github.com/iijimahr/wind3d_field_lines.git
-cd wind3d_field_lines
-python -m venv venv
-. venv/bin/activate
-pip install -U pip && pip install -e ".[dev,docs]"
-```
-
-### Task automation with Makefile
-
-```shell
-make test         # Run lint, doctest, and unit tests
-make pytest       # Run unit tests
-make typecheck    # Run static type checking
-make docs         # Build documentation
-make clean        # Clean build artifacts
-```
+Published docs: <https://iijimahr.github.io/wind3d_field_lines/>
 
 ## Quick start
 
 Cartesian grid:
 
 ```python
-import numpy as np
 from wind3d_field_lines import trace_field_lines
 
 result = trace_field_lines(
@@ -69,8 +40,7 @@ result = trace_field_lines_curvilinear(
 ## Demo
 
 See the [Arcade Field Demo](https://iijimahr.github.io/wind3d_field_lines/demo_arcade.html)
-page in the documentation for a step-by-step example of tracing and
-visualizing magnetic field lines.
+for a step-by-step example of tracing and visualizing magnetic field lines.
 
 ```python
 from wind3d_field_lines.demo_arcade import ArcadeDemoConfig, run_demo
@@ -79,7 +49,29 @@ run_demo(ArcadeDemoConfig())                          # interactive
 run_demo(ArcadeDemoConfig(output="arcade_demo.png"))  # save to file
 ```
 
-## CI/CD
+## For developers
+
+### Installation
+
+```shell
+git clone https://github.com/iijimahr/wind3d_field_lines.git
+cd wind3d_field_lines
+python -m venv venv
+. venv/bin/activate
+pip install -U pip && pip install -e ".[dev,docs]"
+```
+
+### Task automation with Makefile
+
+```shell
+make test         # Run lint, doctest, and unit tests
+make pytest       # Run unit tests
+make typecheck    # Run static type checking
+make docs         # Build documentation
+make clean        # Clean build artifacts
+```
+
+### CI/CD
 
 GitHub Actions runs validation on pushes and pull requests:
 
@@ -92,6 +84,3 @@ GitHub Actions runs validation on pushes and pull requests:
 
 Documentation is deployed to GitHub Pages only when changes are merged into
 `main` (or manually via workflow dispatch), not on regular branch pushes.
-
-Published docs URL:
-<https://iijimahr.github.io/wind3d_field_lines/>
