@@ -14,6 +14,18 @@ Two tracing functions are provided:
 Both functions return a frozen dataclass containing the traced coordinates and
 valid index ranges for each field line.
 
+Status
+======
+
+This package is under active development for research and learning purposes.
+
+Installation
+============
+
+.. code-block:: bash
+
+   pip install -e .
+
 Quick start
 ===========
 
@@ -45,18 +57,6 @@ Orthogonal curvilinear coordinates:
        lcen_bln=151, lx_bln=301, margin=0,
    )
    # result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
-
-Status
-======
-
-This package is under active development for research and learning purposes.
-
-Installation
-============
-
-.. code-block:: bash
-
-   pip install -e .
 
 API Reference
 =============
