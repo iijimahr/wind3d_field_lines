@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import argparse
 import math
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,11 +28,8 @@ class ArcadeDemoConfig:
     y_max: float = 40.0
     z_min: float = 0.0
     z_max: float = 65.0
-    seed_count: int = 9
-    seed_x_min: float = -8.0
-    seed_x_max: float = 8.0
-    seed_y: float = 0.0
-    seed_z: float = 0.0
+    seed_count: int = 12
+    seed_rng_seed: int = 42
     lx_bln: int = 101
     lcen_bln: int = 51
     margin: int = 0
@@ -166,9 +161,21 @@ def run_demo(config: ArcadeDemoConfig) -> int:
     dy_profile = np.full(config.nz, dy_step, dtype=np.float64)
     dz_profile = np.full(config.nz, dz_step, dtype=np.float64)
 
-    seed_x = np.linspace(config.seed_x_min, config.seed_x_max, config.seed_count)
-    seed_y = np.full(config.seed_count, config.seed_y, dtype=np.float64)
-    seed_z = np.full(config.seed_count, config.seed_z, dtype=np.float64)
+    # Scatter seed points randomly over the photospheric surface (z = 0).
+    # Avoid |x| < 0.5 Mm near the polarity inversion line where Bz ~ 0.
+    rng = np.random.default_rng(config.seed_rng_seed)
+    x_half = config.x_max * 0.85
+    y_half = config.y_max * 0.6
+    seed_x_raw = rng.uniform(-x_half, x_half, config.seed_count)
+    # Nudge seeds very close to the PIL away from it so tracing is meaningful.
+    pil_margin = 0.5
+    seed_x = np.where(
+        np.abs(seed_x_raw) < pil_margin,
+        np.sign(seed_x_raw + 1e-9) * pil_margin,
+        seed_x_raw,
+    )
+    seed_y = rng.uniform(-y_half, y_half, config.seed_count)
+    seed_z = np.zeros(config.seed_count, dtype=np.float64)
 
     icen = _to_index(seed_x, config.x_min, dx_step)
     jcen = _to_index(seed_y, config.y_min, dy_step)
@@ -246,84 +253,3 @@ def run_demo(config: ArcadeDemoConfig) -> int:
 
     plt.close(fig)
     return 0
-
-
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Build a linear force-free arcade magnetic field and save it to a .npz file."
-        )
-    )
-    parser.add_argument(
-        "--ba", type=float, default=6.0, help="Field strength scale Ba [G]."
-    )
-    parser.add_argument(
-        "--la", type=float, default=12.0, help="Arcade half-width scale La [Mm]."
-    )
-    parser.add_argument(
-        "--decay-a", type=float, default=30.0, help="Vertical decay length a [Mm]."
-    )
-    parser.add_argument("--nx", type=int, default=65, help="Number of x-grid points.")
-    parser.add_argument("--ny", type=int, default=65, help="Number of y-grid points.")
-    parser.add_argument("--nz", type=int, default=65, help="Number of z-grid points.")
-    parser.add_argument(
-        "--x-min", type=float, default=-12.0, help="Grid x minimum [Mm]."
-    )
-    parser.add_argument(
-        "--x-max", type=float, default=12.0, help="Grid x maximum [Mm]."
-    )
-    parser.add_argument(
-        "--y-min", type=float, default=-40.0, help="Grid y minimum [Mm]."
-    )
-    parser.add_argument(
-        "--y-max", type=float, default=40.0, help="Grid y maximum [Mm]."
-    )
-    parser.add_argument(
-        "--z-min", type=float, default=0.0, help="Grid z minimum [Mm]."
-    )
-    parser.add_argument(
-        "--z-max", type=float, default=65.0, help="Grid z maximum [Mm]."
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        required=True,
-        help="Output .npz file path for the field data.",
-    )
-    return parser
-
-
-def main(argv: Sequence[str] | None = None) -> int:
-    """Entry point for the wind3d-build-arcade-field command.
-
-    Builds a linear force-free arcade magnetic field on a regular grid and
-    saves the result to a NumPy ``.npz`` file containing arrays ``x``, ``y``,
-    ``z``, ``bx``, ``by``, and ``bz``.
-    """
-    parser = _build_parser()
-    args = parser.parse_args(argv)
-
-    x = np.linspace(args.x_min, args.x_max, args.nx, dtype=np.float64)
-    y = np.linspace(args.y_min, args.y_max, args.ny, dtype=np.float64)
-    z = np.linspace(args.z_min, args.z_max, args.nz, dtype=np.float64)
-
-    bx, by, bz = build_arcade_field(
-        ba=args.ba,
-        la=args.la,
-        decay_a=args.decay_a,
-        x=x,
-        y=y,
-        z=z,
-    )
-
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez(out_path, x=x, y=y, z=z, bx=bx, by=by, bz=bz)
-    print(f"Saved arcade field to: {out_path}")
-    print(f"  grid: ({args.nx}, {args.ny}, {args.nz})")
-    print(f"  ba={args.ba} G, la={args.la} Mm, decay_a={args.decay_a} Mm")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

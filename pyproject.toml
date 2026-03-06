@@ -16,9 +16,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["numpy>=2.0"]
 
-[project.scripts]
-wind3d-build-arcade-field = "wind3d_field_lines.demo_arcade:main"
-
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
 docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
