@@ -1,4 +1,4 @@
-"""Tests for compute_potential_field."""
+"""Tests for compute_potential_field and _thomas_solve."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from wind3d_field_lines import compute_potential_field
+from wind3d_field_lines.potential_field import _thomas_solve
 
 
 # ---------------------------------------------------------------------------
@@ -267,3 +268,145 @@ class TestInputValidation:
         args["hxi"] = args["hxi"].astype(np.float32)
         b1, b2, b3 = compute_potential_field(**args)
         assert b1.dtype == np.float64
+
+
+# ---------------------------------------------------------------------------
+# _thomas_solve unit tests
+# ---------------------------------------------------------------------------
+
+class TestThomasSolve:
+    """Unit tests for the internal TDMA solver."""
+
+    def _solve(self, lower, diag, upper, rhs):
+        """Thin wrapper that converts lists to arrays."""
+        return _thomas_solve(
+            lower=np.array(lower, dtype=np.float64),
+            diag=np.array(diag, dtype=np.float64),
+            upper=np.array(upper, dtype=np.float64),
+            rhs=np.array(rhs, dtype=np.float64),
+        )
+
+    # --- correctness against numpy.linalg.solve ---
+
+    def test_n2_system(self):
+        # [2 -1] [x0]   [1]
+        # [-1 3] [x1] = [2]
+        lower = [0.0, -1.0]
+        diag  = [2.0,  3.0]
+        upper = [-1.0, 0.0]
+        rhs   = [1.0, 2.0]
+
+        x = self._solve(lower, diag, upper, rhs)
+
+        A = np.array([[2, -1], [-1, 3]], dtype=np.float64)
+        expected = np.linalg.solve(A, [1.0, 2.0])
+        np.testing.assert_allclose(x, expected, atol=1e-14)
+
+    def test_n5_system(self):
+        rng = np.random.default_rng(0)
+        n = 5
+        # Build a diagonally dominant tridiagonal matrix.
+        lower = np.concatenate([[0.0], rng.uniform(-1, 0, n - 1)])
+        upper = np.concatenate([rng.uniform(-1, 0, n - 1), [0.0]])
+        diag  = -(np.abs(lower) + np.abs(upper)) - 1.0   # strictly dominant
+        rhs   = rng.standard_normal(n)
+
+        x = _thomas_solve(lower, diag, upper, rhs)
+
+        A = np.diag(diag) + np.diag(lower[1:], -1) + np.diag(upper[:-1], 1)
+        expected = np.linalg.solve(A, rhs)
+        np.testing.assert_allclose(x, expected, atol=1e-12)
+
+    def test_identity_like_system(self):
+        # Diagonal-only system: solution is rhs / diag.
+        n = 8
+        diag  = np.full(n, 3.0)
+        lower = np.zeros(n)
+        upper = np.zeros(n)
+        rhs   = np.arange(1.0, n + 1)
+
+        x = _thomas_solve(lower, diag, upper, rhs)
+
+        np.testing.assert_allclose(x, rhs / 3.0, atol=1e-14)
+
+    # --- batched (multi-dimensional) RHS ---
+
+    def test_batched_2d_rhs(self):
+        # Same matrix, multiple RHS vectors stacked in axis 0.
+        n = 4
+        lower = np.array([0.0, -1.0, -1.0, -1.0])
+        diag  = np.array([-3.0, -3.0, -3.0, -3.0])
+        upper = np.array([-1.0, -1.0, -1.0,  0.0])
+        A = np.diag(diag) + np.diag(lower[1:], -1) + np.diag(upper[:-1], 1)
+
+        rng = np.random.default_rng(1)
+        batch = 5
+        rhs_batch = rng.standard_normal((batch, n))    # (5, n)
+
+        x_batch = _thomas_solve(
+            lower=lower,
+            diag=np.broadcast_to(diag, (batch, n)).copy(),
+            upper=upper,
+            rhs=rhs_batch,
+        )
+
+        for i in range(batch):
+            expected = np.linalg.solve(A, rhs_batch[i])
+            np.testing.assert_allclose(x_batch[i], expected, atol=1e-12)
+
+    def test_batched_3d_rhs(self):
+        # Three-dimensional batch (m, n, system_size).
+        n = 6
+        lower = np.array([0.0, -0.5, -0.5, -0.5, -0.5, -0.5])
+        diag  = np.full(n, -2.0)
+        upper = np.array([-0.5, -0.5, -0.5, -0.5, -0.5,  0.0])
+        A = np.diag(diag) + np.diag(lower[1:], -1) + np.diag(upper[:-1], 1)
+
+        rng = np.random.default_rng(2)
+        m1, m2 = 3, 4
+        rhs_3d = rng.standard_normal((m1, m2, n))
+
+        x_3d = _thomas_solve(
+            lower=lower,
+            diag=np.broadcast_to(diag, (m1, m2, n)).copy(),
+            upper=upper,
+            rhs=rhs_3d,
+        )
+
+        assert x_3d.shape == (m1, m2, n)
+        for i in range(m1):
+            for j in range(m2):
+                expected = np.linalg.solve(A, rhs_3d[i, j])
+                np.testing.assert_allclose(x_3d[i, j], expected, atol=1e-12)
+
+    # --- output properties ---
+
+    def test_output_shape_matches_rhs(self):
+        n = 7
+        diag = np.full((3, 5, n), -2.0)
+        lower = np.zeros(n)
+        upper = np.zeros(n)
+        rhs = np.ones((3, 5, n))
+
+        x = _thomas_solve(lower, diag, upper, rhs)
+        assert x.shape == (3, 5, n)
+
+    def test_output_dtype_is_float64(self):
+        diag  = np.array([-2.0, -2.0])
+        lower = np.zeros(2)
+        upper = np.zeros(2)
+        rhs   = np.ones(2)
+
+        x = _thomas_solve(lower, diag, upper, rhs)
+        assert x.dtype == np.float64
+
+    def test_does_not_modify_input_rhs(self):
+        diag  = np.array([-2.0, -3.0, -2.0])
+        lower = np.array([0.0, -0.5, -0.5])
+        upper = np.array([-0.5, -0.5,  0.0])
+        rhs   = np.array([1.0, 2.0, 3.0])
+        rhs_copy = rhs.copy()
+
+        _thomas_solve(lower, diag, upper, rhs)
+
+        np.testing.assert_array_equal(rhs, rhs_copy)
