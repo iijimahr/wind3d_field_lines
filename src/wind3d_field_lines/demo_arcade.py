@@ -30,8 +30,8 @@ class ArcadeDemoConfig:
     z_max: float = 65.0
     seed_count: int = 30
     seed_rng_seed: int = 42
-    lx_bln: int = 101
-    lcen_bln: int = 51
+    lx_bln: int = 201
+    lcen_bln: int = 101
     margin: int = 0
     nsubstepx: int = 3
     output: str | None = None
