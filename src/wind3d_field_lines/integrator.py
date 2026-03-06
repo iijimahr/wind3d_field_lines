@@ -139,8 +139,8 @@ def trace_field_lines(
 def trace_field_lines_curvilinear(
     *,
     b_xi: NDArray[np.floating[Any]],
-    b_eta: NDArray[np.floating[Any]],
-    b_zeta: NDArray[np.floating[Any]],
+    b_et: NDArray[np.floating[Any]],
+    b_zt: NDArray[np.floating[Any]],
     dxi: float,
     det: float,
     dzt: float,
@@ -164,8 +164,8 @@ def trace_field_lines_curvilinear(
 
     Parameters
     ----------
-    b_xi, b_eta, b_zeta:
-        Physical components of the magnetic field (B_xi, B_eta, B_zeta) with
+    b_xi, b_et, b_zt:
+        Physical components of the magnetic field (B_xi, B_et, B_zt) with
         shape ``(ix, jx, kx)``.
     dxi, det, dzt:
         Uniform grid spacing in the xi, eta, and zeta directions (scalars).
@@ -199,11 +199,11 @@ def trace_field_lines_curvilinear(
     """
 
     b_xi64 = _as_float64_array("b_xi", b_xi, ndim=3)
-    b_eta64 = _as_float64_array("b_eta", b_eta, ndim=3)
-    b_zeta64 = _as_float64_array("b_zeta", b_zeta, ndim=3)
+    b_et64 = _as_float64_array("b_et", b_et, ndim=3)
+    b_zt64 = _as_float64_array("b_zt", b_zt, ndim=3)
 
-    if b_xi64.shape != b_eta64.shape or b_xi64.shape != b_zeta64.shape:
-        raise ValueError("b_xi, b_eta, and b_zeta must have the same shape.")
+    if b_xi64.shape != b_et64.shape or b_xi64.shape != b_zt64.shape:
+        raise ValueError("b_xi, b_et, and b_zt must have the same shape.")
 
     _, _, kx = b_xi64.shape
 
@@ -228,8 +228,8 @@ def trace_field_lines_curvilinear(
     # From the theory: B_tilde_xi = h_eta * h_zeta * B_xi, etc.
     # hxi64 has shape (kx,) and broadcasts against b_xi64 of shape (ix, jx, kx).
     b_tilde_xi = b_xi64 * (het64 * hzt64)
-    b_tilde_eta = b_eta64 * (hzt64 * hxi64)
-    b_tilde_zet = b_zeta64 * (hxi64 * het64)
+    b_tilde_et = b_et64 * (hzt64 * hxi64)
+    b_tilde_zt = b_zt64 * (hxi64 * het64)
 
     dx_arr = np.full(kx, dxi_f)
     dy_arr = np.full(kx, det_f)
@@ -237,8 +237,8 @@ def trace_field_lines_curvilinear(
 
     raw = trace_field_lines(
         bx=b_tilde_xi,
-        by=b_tilde_eta,
-        bz=b_tilde_zet,
+        by=b_tilde_et,
+        bz=b_tilde_zt,
         dx=dx_arr,
         dy=dy_arr,
         dz=dz_arr,

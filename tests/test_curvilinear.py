@@ -38,8 +38,8 @@ def test_cartesian_identity() -> None:
 
     result = trace_field_lines_curvilinear(
         b_xi=bxi,
-        b_eta=bet,
-        b_zeta=bzt,
+        b_et=bet,
+        b_zt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -69,8 +69,8 @@ def test_uniform_scale_factor_geometry() -> None:
 
     common_kwargs = dict(
         b_xi=bxi,
-        b_eta=bet,
-        b_zeta=bzt,
+        b_et=bet,
+        b_zt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -108,8 +108,8 @@ def test_output_type_and_shape() -> None:
 
     result = trace_field_lines_curvilinear(
         b_xi=bxi,
-        b_eta=bet,
-        b_zeta=bzt,
+        b_et=bet,
+        b_zt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -141,8 +141,8 @@ def test_float32_input_accepted() -> None:
 
     result = trace_field_lines_curvilinear(
         b_xi=bxi,
-        b_eta=bet,
-        b_zeta=bzt,
+        b_et=bet,
+        b_zt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -175,8 +175,8 @@ def test_varying_scale_factor_in_zeta() -> None:
 
     result = trace_field_lines_curvilinear(
         b_xi=bxi,
-        b_eta=bet,
-        b_zeta=bzt,
+        b_et=bet,
+        b_zt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -205,8 +205,8 @@ def test_invalid_field_shape_raises() -> None:
     with pytest.raises(ValueError, match="shape"):
         trace_field_lines_curvilinear(
             b_xi=bxi,
-            b_eta=bet,
-            b_zeta=bzt,
+            b_et=bet,
+            b_zt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,
@@ -231,8 +231,8 @@ def test_invalid_scale_factor_shape_raises() -> None:
     with pytest.raises(ValueError, match="shape"):
         trace_field_lines_curvilinear(
             b_xi=bxi,
-            b_eta=bet,
-            b_zeta=bzt,
+            b_et=bet,
+            b_zt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,
@@ -257,8 +257,8 @@ def test_non_positive_grid_spacing_raises() -> None:
     with pytest.raises(ValueError, match="positive"):
         trace_field_lines_curvilinear(
             b_xi=bxi,
-            b_eta=bet,
-            b_zeta=bzt,
+            b_et=bet,
+            b_zt=bzt,
             dxi=0.0,
             det=1.0,
             dzt=1.0,
@@ -283,8 +283,8 @@ def test_non_positive_scale_factor_raises() -> None:
     with pytest.raises(ValueError, match="positive"):
         trace_field_lines_curvilinear(
             b_xi=bxi,
-            b_eta=bet,
-            b_zeta=bzt,
+            b_et=bet,
+            b_zt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,

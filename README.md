@@ -29,7 +29,7 @@ Orthogonal curvilinear coordinates:
 from wind3d_field_lines import trace_field_lines_curvilinear
 
 result = trace_field_lines_curvilinear(
-    b_xi=b_xi, b_eta=b_eta, b_zeta=b_zeta,
+    b_xi=b_xi, b_et=b_et, b_zt=b_zt,
     dxi=dxi, det=det, dzt=dzt,
     hxi=hxi, het=het, hzt=hzt,
     seed_i=icen, seed_j=jcen, seed_k=kcen,
