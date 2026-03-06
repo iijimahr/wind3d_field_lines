@@ -1,7 +1,18 @@
 wind3d_field_lines
 ==================
 
-This package provides a Fortran-backed magnetic field-line tracer for wind3d data.
+Magnetic field-line tracer for wind3d data, backed by a Fortran extension.
+
+Two tracing functions are provided:
+
+- :func:`~wind3d_field_lines.trace_field_lines` — Cartesian grids with
+  non-uniform spacing along the vertical axis.
+- :func:`~wind3d_field_lines.trace_field_lines_curvilinear` — orthogonal
+  curvilinear coordinate systems, using scale-factor rescaling of the field
+  components (see :doc:`theory_curvilinear`).
+
+Both functions return a frozen dataclass containing the traced coordinates and
+valid index ranges for each field line.
 
 Status
 ======

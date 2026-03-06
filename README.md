@@ -1,6 +1,8 @@
 # wind3d_field_lines
 
-Initial implementation of a magnetic field-line tracer for wind3d data.
+Magnetic field-line tracer for wind3d data.
+Supports both Cartesian grids (`trace_field_lines`) and orthogonal curvilinear
+coordinate systems (`trace_field_lines_curvilinear`).
 
 ## Documentation
 
@@ -38,13 +40,43 @@ make docs         # Build documentation
 make clean        # Clean build artifacts
 ```
 
+## Quick start
+
+Cartesian grid:
+
+```python
+import numpy as np
+from wind3d_field_lines import trace_field_lines
+
+result = trace_field_lines(
+    bx=bx, by=by, bz=bz,
+    dx=dx_profile, dy=dy_profile, dz=dz_profile,
+    icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
+    lcen_bln=151, lx_bln=301, margin=0,
+)
+# result.i/j/k : traced grid indices, shape (n_seeds, lx_bln)
+```
+
+Orthogonal curvilinear coordinates:
+
+```python
+from wind3d_field_lines import trace_field_lines_curvilinear
+
+result = trace_field_lines_curvilinear(
+    bxi=bxi, bet=bet, bzt=bzt,
+    dxi=dxi, det=det, dzt=dzt,
+    hxi=hxi, het=het, hzt=hzt,
+    icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
+    lcen_bln=151, lx_bln=301, margin=0,
+)
+# result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
+```
+
 ## Demo
 
 See the [Arcade Field Demo](https://iijimahr.github.io/wind3d_field_lines/demo_arcade.html)
 page in the documentation for a step-by-step example of tracing and
 visualizing magnetic field lines.
-
-Quick start:
 
 ```python
 from wind3d_field_lines.demo_arcade import ArcadeDemoConfig, run_demo
