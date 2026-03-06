@@ -14,6 +14,38 @@ Two tracing functions are provided:
 Both functions return a frozen dataclass containing the traced coordinates and
 valid index ranges for each field line.
 
+Quick start
+===========
+
+Cartesian grid:
+
+.. code-block:: python
+
+   from wind3d_field_lines import trace_field_lines
+
+   result = trace_field_lines(
+       bx=bx, by=by, bz=bz,
+       dx=dx_profile, dy=dy_profile, dz=dz_profile,
+       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
+       lcen_bln=151, lx_bln=301, margin=0,
+   )
+   # result.i/j/k : traced grid indices, shape (n_seeds, lx_bln)
+
+Orthogonal curvilinear coordinates:
+
+.. code-block:: python
+
+   from wind3d_field_lines import trace_field_lines_curvilinear
+
+   result = trace_field_lines_curvilinear(
+       bxi=bxi, bet=bet, bzt=bzt,
+       dxi=dxi, det=det, dzt=dzt,
+       hxi=hxi, het=het, hzt=hzt,
+       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
+       lcen_bln=151, lx_bln=301, margin=0,
+   )
+   # result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
+
 Status
 ======
 
