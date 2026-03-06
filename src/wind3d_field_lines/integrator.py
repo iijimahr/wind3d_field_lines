@@ -10,19 +10,20 @@ from .types import CurvilinearFieldLineResult, FieldLineResult
 
 
 def trace_field_lines(
+    *,
     bx: NDArray[np.floating[Any]],
     by: NDArray[np.floating[Any]],
     bz: NDArray[np.floating[Any]],
     dx: NDArray[np.floating[Any]],
     dy: NDArray[np.floating[Any]],
     dz: NDArray[np.floating[Any]],
-    icen_bln: NDArray[np.floating[Any]],
-    jcen_bln: NDArray[np.floating[Any]],
-    kcen_bln: NDArray[np.floating[Any]],
-    lcen_bln: int,
-    lx_bln: int,
-    margin: int,
-    nsubstepx: int = 3,
+    seed_i: NDArray[np.floating[Any]],
+    seed_j: NDArray[np.floating[Any]],
+    seed_k: NDArray[np.floating[Any]],
+    line_center: int,
+    line_length: int,
+    margin: int = 0,
+    n_substeps: int = 3,
 ) -> FieldLineResult:
     """Trace magnetic field lines using the Fortran backend via f2py.
 
@@ -32,15 +33,15 @@ def trace_field_lines(
         Magnetic field components with shape ``(ix, jx, kx)``.
     dx, dy, dz:
         Grid spacing profiles along the vertical index with shape ``(kx,)``.
-    icen_bln, jcen_bln, kcen_bln:
-        Per-line center coordinates with shape ``(nx_bln,)``.
-    lcen_bln:
+    seed_i, seed_j, seed_k:
+        Per-line center coordinates with shape ``(num_lines,)``.
+    line_center:
         1-based center index along the line coordinate.
-    lx_bln:
+    line_length:
         Number of points along each field line.
     margin:
         Number of ghost cells for periodic boundary handling.
-    nsubstepx:
+    n_substeps:
         Number of integration substeps per line segment.
 
     Returns
@@ -63,7 +64,7 @@ def trace_field_lines(
     if bx64.shape != by64.shape or bx64.shape != bz64.shape:
         raise ValueError("bx, by, and bz must have the same shape.")
 
-    ix, jx, kx = bx64.shape
+    _, _, kx = bx64.shape
 
     dx64 = _as_float64_array("dx", dx, ndim=1)
     dy64 = _as_float64_array("dy", dy, ndim=1)
@@ -72,29 +73,29 @@ def trace_field_lines(
     if dx64.shape != (kx,) or dy64.shape != (kx,) or dz64.shape != (kx,):
         raise ValueError("dx, dy, and dz must have shape (kx,).")
 
-    icen64 = _as_float64_array("icen_bln", icen_bln, ndim=1)
-    jcen64 = _as_float64_array("jcen_bln", jcen_bln, ndim=1)
-    kcen64 = _as_float64_array("kcen_bln", kcen_bln, ndim=1)
+    seed_i64 = _as_float64_array("seed_i", seed_i, ndim=1)
+    seed_j64 = _as_float64_array("seed_j", seed_j, ndim=1)
+    seed_k64 = _as_float64_array("seed_k", seed_k, ndim=1)
 
-    if not (icen64.shape == jcen64.shape == kcen64.shape):
-        raise ValueError("icen_bln, jcen_bln, and kcen_bln must have the same shape.")
+    if not (seed_i64.shape == seed_j64.shape == seed_k64.shape):
+        raise ValueError("seed_i, seed_j, and seed_k must have the same shape.")
 
-    nx_bln = icen64.shape[0]
+    num_lines = seed_i64.shape[0]
 
-    if lx_bln <= 0:
-        raise ValueError("lx_bln must be greater than 0.")
-    if not (1 <= lcen_bln <= lx_bln):
-        raise ValueError("lcen_bln must satisfy 1 <= lcen_bln <= lx_bln.")
+    if line_length <= 0:
+        raise ValueError("line_length must be greater than 0.")
+    if not (1 <= line_center <= line_length):
+        raise ValueError("line_center must satisfy 1 <= line_center <= line_length.")
     if margin < 0:
         raise ValueError("margin must be non-negative.")
-    if nsubstepx <= 0:
-        raise ValueError("nsubstepx must be greater than 0.")
+    if n_substeps <= 0:
+        raise ValueError("n_substeps must be greater than 0.")
 
-    i_bln = np.zeros((nx_bln, lx_bln), dtype=np.float64, order="F")
-    j_bln = np.zeros((nx_bln, lx_bln), dtype=np.float64, order="F")
-    k_bln = np.zeros((nx_bln, lx_bln), dtype=np.float64, order="F")
-    lmin_bln = np.zeros(nx_bln, dtype=np.int32)
-    lmax_bln = np.zeros(nx_bln, dtype=np.int32)
+    i_bln = np.zeros((num_lines, line_length), dtype=np.float64, order="F")
+    j_bln = np.zeros((num_lines, line_length), dtype=np.float64, order="F")
+    k_bln = np.zeros((num_lines, line_length), dtype=np.float64, order="F")
+    lmin_bln = np.zeros(num_lines, dtype=np.int32)
+    lmax_bln = np.zeros(num_lines, dtype=np.int32)
 
     try:
         _bbtobln = cast(Any, importlib.import_module("wind3d_field_lines._bbtobln"))
@@ -109,17 +110,17 @@ def trace_field_lines(
         k_bln=k_bln,
         lmin_bln=lmin_bln,
         lmax_bln=lmax_bln,
-        lcen_bln=int(lcen_bln),
-        icen_bln=np.asfortranarray(icen64),
-        jcen_bln=np.asfortranarray(jcen64),
-        kcen_bln=np.asfortranarray(kcen64),
+        lcen_bln=int(line_center),
+        icen_bln=np.asfortranarray(seed_i64),
+        jcen_bln=np.asfortranarray(seed_j64),
+        kcen_bln=np.asfortranarray(seed_k64),
         bx=np.asfortranarray(bx64),
         by=np.asfortranarray(by64),
         bz=np.asfortranarray(bz64),
         dx=np.asfortranarray(dx64),
         dy=np.asfortranarray(dy64),
         dz=np.asfortranarray(dz64),
-        nsubstepx=int(nsubstepx),
+        nsubstepx=int(n_substeps),
         margin=int(margin),
     )
 
@@ -129,29 +130,30 @@ def trace_field_lines(
         k=k_bln,
         lmin=lmin_bln,
         lmax=lmax_bln,
-        lcen=int(lcen_bln),
-        nx=int(nx_bln),
-        lx=int(lx_bln),
+        line_center=int(line_center),
+        num_lines=int(num_lines),
+        line_length=int(line_length),
     )
 
 
 def trace_field_lines_curvilinear(
-    bxi: NDArray[np.floating[Any]],
-    bet: NDArray[np.floating[Any]],
-    bzt: NDArray[np.floating[Any]],
+    *,
+    b_xi: NDArray[np.floating[Any]],
+    b_eta: NDArray[np.floating[Any]],
+    b_zeta: NDArray[np.floating[Any]],
     dxi: float,
     det: float,
     dzt: float,
     hxi: NDArray[np.floating[Any]],
     het: NDArray[np.floating[Any]],
     hzt: NDArray[np.floating[Any]],
-    icen_bln: NDArray[np.floating[Any]],
-    jcen_bln: NDArray[np.floating[Any]],
-    kcen_bln: NDArray[np.floating[Any]],
-    lcen_bln: int,
-    lx_bln: int,
-    margin: int,
-    nsubstepx: int = 3,
+    seed_i: NDArray[np.floating[Any]],
+    seed_j: NDArray[np.floating[Any]],
+    seed_k: NDArray[np.floating[Any]],
+    line_center: int,
+    line_length: int,
+    margin: int = 0,
+    n_substeps: int = 3,
 ) -> CurvilinearFieldLineResult:
     """Trace magnetic field lines in an orthogonal curvilinear coordinate system.
 
@@ -162,7 +164,7 @@ def trace_field_lines_curvilinear(
 
     Parameters
     ----------
-    bxi, bet, bzt:
+    b_xi, b_eta, b_zeta:
         Physical components of the magnetic field (B_xi, B_eta, B_zeta) with
         shape ``(ix, jx, kx)``.
     dxi, det, dzt:
@@ -170,16 +172,16 @@ def trace_field_lines_curvilinear(
     hxi, het, hzt:
         Scale factors h_xi, h_eta, h_zeta with shape ``(kx,)``.  Each scale
         factor may depend on the zeta index only.
-    icen_bln, jcen_bln, kcen_bln:
+    seed_i, seed_j, seed_k:
         Per-line seed coordinates as 1-based grid indices with shape
-        ``(nx_bln,)``.
-    lcen_bln:
+        ``(num_lines,)``.
+    line_center:
         1-based center index along the line coordinate.
-    lx_bln:
+    line_length:
         Number of points along each field line.
     margin:
         Number of ghost cells for periodic boundary handling.
-    nsubstepx:
+    n_substeps:
         Number of integration substeps per line segment.
 
     Returns
@@ -196,14 +198,14 @@ def trace_field_lines_curvilinear(
         If the compiled Fortran extension is not available.
     """
 
-    bxi64 = _as_float64_array("bxi", bxi, ndim=3)
-    bet64 = _as_float64_array("bet", bet, ndim=3)
-    bzt64 = _as_float64_array("bzt", bzt, ndim=3)
+    b_xi64 = _as_float64_array("b_xi", b_xi, ndim=3)
+    b_eta64 = _as_float64_array("b_eta", b_eta, ndim=3)
+    b_zeta64 = _as_float64_array("b_zeta", b_zeta, ndim=3)
 
-    if bxi64.shape != bet64.shape or bxi64.shape != bzt64.shape:
-        raise ValueError("bxi, bet, and bzt must have the same shape.")
+    if b_xi64.shape != b_eta64.shape or b_xi64.shape != b_zeta64.shape:
+        raise ValueError("b_xi, b_eta, and b_zeta must have the same shape.")
 
-    ix, jx, kx = bxi64.shape
+    _, _, kx = b_xi64.shape
 
     hxi64 = _as_float64_array("hxi", hxi, ndim=1)
     het64 = _as_float64_array("het", het, ndim=1)
@@ -224,10 +226,10 @@ def trace_field_lines_curvilinear(
 
     # Scale the magnetic field components.
     # From the theory: B_tilde_xi = h_eta * h_zeta * B_xi, etc.
-    # hxi64 has shape (kx,) and broadcasts against bxi64 of shape (ix, jx, kx).
-    b_tilde_xi = bxi64 * (het64 * hzt64)
-    b_tilde_eta = bet64 * (hzt64 * hxi64)
-    b_tilde_zet = bzt64 * (hxi64 * het64)
+    # hxi64 has shape (kx,) and broadcasts against b_xi64 of shape (ix, jx, kx).
+    b_tilde_xi = b_xi64 * (het64 * hzt64)
+    b_tilde_eta = b_eta64 * (hzt64 * hxi64)
+    b_tilde_zet = b_zeta64 * (hxi64 * het64)
 
     dx_arr = np.full(kx, dxi_f)
     dy_arr = np.full(kx, det_f)
@@ -240,13 +242,13 @@ def trace_field_lines_curvilinear(
         dx=dx_arr,
         dy=dy_arr,
         dz=dz_arr,
-        icen_bln=icen_bln,
-        jcen_bln=jcen_bln,
-        kcen_bln=kcen_bln,
-        lcen_bln=lcen_bln,
-        lx_bln=lx_bln,
+        seed_i=seed_i,
+        seed_j=seed_j,
+        seed_k=seed_k,
+        line_center=line_center,
+        line_length=line_length,
         margin=margin,
-        nsubstepx=nsubstepx,
+        n_substeps=n_substeps,
     )
 
     return CurvilinearFieldLineResult(
@@ -255,9 +257,9 @@ def trace_field_lines_curvilinear(
         zeta=(raw.k - 1.0) * dzt_f,
         lmin=raw.lmin,
         lmax=raw.lmax,
-        lcen=raw.lcen,
-        nx=raw.nx,
-        lx=raw.lx,
+        line_center=raw.line_center,
+        num_lines=raw.num_lines,
+        line_length=raw.line_length,
     )
 
 

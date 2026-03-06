@@ -95,8 +95,8 @@ Step-by-step example
    result = trace_field_lines(
        bx=b1, by=b2, bz=b3,
        dx=dx_profile, dy=dy_profile, dz=dz_profile,
-       icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-       lcen_bln=301, lx_bln=601,
+       seed_i=icen, seed_j=jcen, seed_k=kcen,
+       line_center=301, line_length=601, margin=0,
    )
 
 **4. Visualize**
@@ -118,9 +118,9 @@ Step-by-step example
                zdir="z", offset=0.0, cmap="RdBu_r",
                vmin=-vmax, vmax=vmax, alpha=0.85)
 
-   for n in range(result.nx):
+   for n in range(result.num_lines):
        lmin = int(max(1, result.lmin[n]))
-       lmax = int(min(result.lx, result.lmax[n]))
+       lmax = int(min(result.line_length, result.lmax[n]))
        if lmax - lmin + 1 < 2:
            continue
        ax.plot(x_line[n, lmin-1:lmax], y_line[n, lmin-1:lmax],

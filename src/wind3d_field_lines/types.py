@@ -15,9 +15,9 @@ class FieldLineResult:
     k: NDArray[np.float64]
     lmin: NDArray[np.int32]
     lmax: NDArray[np.int32]
-    lcen: int
-    nx: int
-    lx: int
+    line_center: int
+    num_lines: int
+    line_length: int
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,6 @@ class CurvilinearFieldLineResult:
     zeta: NDArray[np.float64]
     lmin: NDArray[np.int32]
     lmax: NDArray[np.int32]
-    lcen: int
-    nx: int
-    lx: int
+    line_center: int
+    num_lines: int
+    line_length: int

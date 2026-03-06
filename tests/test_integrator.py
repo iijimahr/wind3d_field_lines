@@ -7,6 +7,13 @@ import pytest
 
 from wind3d_field_lines import trace_field_lines
 
+_HAS_FORTRAN = importlib.util.find_spec("wind3d_field_lines._bbtobln") is not None
+
+_skip_no_fortran = pytest.mark.skipif(
+    not _HAS_FORTRAN,
+    reason="Fortran extension is not built.",
+)
+
 
 def _build_uniform_case(dtype: type[np.floating]) -> tuple[np.ndarray, ...]:
     ix, jx, kx = 4, 4, 6
@@ -22,10 +29,7 @@ def _build_uniform_case(dtype: type[np.floating]) -> tuple[np.ndarray, ...]:
     return bx, by, bz, dx, dy, dz, icen, jcen, kcen
 
 
-@pytest.mark.skipif(
-    importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran extension is not built.",
-)
+@_skip_no_fortran
 def test_trace_uniform_vertical_field() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, kcen = _build_uniform_case(np.float64)
 
@@ -36,26 +40,23 @@ def test_trace_uniform_vertical_field() -> None:
         dx=dx,
         dy=dy,
         dz=dz,
-        icen_bln=icen,
-        jcen_bln=jcen,
-        kcen_bln=kcen,
-        lcen_bln=3,
-        lx_bln=6,
+        seed_i=icen,
+        seed_j=jcen,
+        seed_k=kcen,
+        line_center=3,
+        line_length=6,
         margin=1,
-        nsubstepx=2,
+        n_substeps=2,
     )
 
     np.testing.assert_allclose(result.i[:, 2], icen)
     np.testing.assert_allclose(result.j[:, 2], jcen)
     np.testing.assert_allclose(result.k[:, 2], kcen)
-    assert np.all((1 <= result.lmin) & (result.lmin <= result.lx))
-    assert np.all((1 <= result.lmax) & (result.lmax <= result.lx))
+    assert np.all((1 <= result.lmin) & (result.lmin <= result.line_length))
+    assert np.all((1 <= result.lmax) & (result.lmax <= result.line_length))
 
 
-@pytest.mark.skipif(
-    importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran extension is not built.",
-)
+@_skip_no_fortran
 def test_trace_boundary_clipping() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, _ = _build_uniform_case(np.float64)
     kcen = np.array([4.8, 4.8], dtype=np.float64)
@@ -67,22 +68,19 @@ def test_trace_boundary_clipping() -> None:
         dx=dx,
         dy=dy,
         dz=dz,
-        icen_bln=icen,
-        jcen_bln=jcen,
-        kcen_bln=kcen,
-        lcen_bln=3,
-        lx_bln=6,
+        seed_i=icen,
+        seed_j=jcen,
+        seed_k=kcen,
+        line_center=3,
+        line_length=6,
         margin=1,
-        nsubstepx=2,
+        n_substeps=2,
     )
 
-    assert np.all(result.lmax < result.lx)
+    assert np.all(result.lmax < result.line_length)
 
 
-@pytest.mark.skipif(
-    importlib.util.find_spec("wind3d_field_lines._bbtobln") is None,
-    reason="Fortran extension is not built.",
-)
+@_skip_no_fortran
 def test_float32_input_is_accepted() -> None:
     bx, by, bz, dx, dy, dz, icen, jcen, kcen = _build_uniform_case(np.float32)
 
@@ -93,11 +91,11 @@ def test_float32_input_is_accepted() -> None:
         dx=dx,
         dy=dy,
         dz=dz,
-        icen_bln=icen,
-        jcen_bln=jcen,
-        kcen_bln=kcen,
-        lcen_bln=3,
-        lx_bln=6,
+        seed_i=icen,
+        seed_j=jcen,
+        seed_k=kcen,
+        line_center=3,
+        line_length=6,
         margin=1,
     )
 
@@ -119,12 +117,33 @@ def test_invalid_shape_raises_value_error() -> None:
             dx=np.ones(2),
             dy=np.ones(2),
             dz=np.ones(2),
-            icen_bln=np.array([1.0]),
-            jcen_bln=np.array([1.0]),
-            kcen_bln=np.array([1.0]),
-            lcen_bln=1,
-            lx_bln=2,
+            seed_i=np.array([1.0]),
+            seed_j=np.array([1.0]),
+            seed_k=np.array([1.0]),
+            line_center=1,
+            line_length=2,
             margin=0,
+        )
+
+
+def test_positional_arguments_rejected() -> None:
+    bx = np.zeros((2, 2, 2), dtype=np.float64)
+    by = np.zeros((2, 2, 2), dtype=np.float64)
+    bz = np.zeros((2, 2, 2), dtype=np.float64)
+
+    with pytest.raises(TypeError):
+        trace_field_lines(  # type: ignore[misc]
+            bx,
+            by,
+            bz,
+            np.ones(2),
+            np.ones(2),
+            np.ones(2),
+            np.array([1.0]),
+            np.array([1.0]),
+            np.array([1.0]),
+            1,
+            2,
         )
 
 

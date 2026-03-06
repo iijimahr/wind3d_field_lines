@@ -30,10 +30,10 @@ class ArcadeDemoConfig:
     z_max: float = 65.0
     seed_count: int = 30
     seed_rng_seed: int = 42
-    lx_bln: int = 301
-    lcen_bln: int = 151
+    line_length: int = 301
+    line_center: int = 151
     margin: int = 0
-    nsubstepx: int = 3
+    n_substeps: int = 3
     output: str | None = None
 
 
@@ -183,13 +183,13 @@ def run_demo(config: ArcadeDemoConfig) -> None:
         dx=dx_profile,
         dy=dy_profile,
         dz=dz_profile,
-        icen_bln=icen,
-        jcen_bln=jcen,
-        kcen_bln=kcen,
-        lcen_bln=config.lcen_bln,
-        lx_bln=config.lx_bln,
+        seed_i=icen,
+        seed_j=jcen,
+        seed_k=kcen,
+        line_center=config.line_center,
+        line_length=config.line_length,
         margin=config.margin,
-        nsubstepx=config.nsubstepx,
+        n_substeps=config.n_substeps,
     )
 
     x_line = _to_physical(result.i, config.x_min, dx_step)
@@ -200,9 +200,9 @@ def run_demo(config: ArcadeDemoConfig) -> None:
     ax = fig.add_subplot(111, projection="3d")
 
     valid_line_count = 0
-    for n in range(result.nx):
+    for n in range(result.num_lines):
         lmin = int(max(1, result.lmin[n]))
-        lmax = int(min(result.lx, result.lmax[n]))
+        lmax = int(min(result.line_length, result.lmax[n]))
         if lmax - lmin + 1 < 2:
             continue
 
@@ -234,7 +234,7 @@ def run_demo(config: ArcadeDemoConfig) -> None:
         "Demo summary: "
         f"grid=({config.nx}, {config.ny}, {config.nz}), "
         f"seeds={config.seed_count}, "
-        f"valid_lines={valid_line_count}/{result.nx}, "
+        f"valid_lines={valid_line_count}/{result.num_lines}, "
         f"l-range=[{int(result.lmin.min())}, {int(result.lmax.max())}]"
     )
 

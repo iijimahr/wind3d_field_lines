@@ -3,14 +3,12 @@ requires = [
   "setuptools>=69",
   "wheel",
   "numpy>=2.0",
-  "meson>=1.5",
-  "ninja>=1.11",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "wind3d-field-lines"
-version = "0.1.0"
+version = "0.2.0"
 description = "Magnetic field line tracer for wind3d data"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -18,7 +16,7 @@ dependencies = ["numpy>=2.0", "matplotlib>=3.8"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.10"]
-docs = ["sphinx>=8.0", "sphinx-rtd-theme>=2.0"]
+docs = ["sphinx>=8.0"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -32,7 +30,7 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-fix = true
+fix = false
 
 [tool.ruff.lint]
 select = [

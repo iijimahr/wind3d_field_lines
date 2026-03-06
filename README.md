@@ -17,10 +17,10 @@ from wind3d_field_lines import trace_field_lines
 result = trace_field_lines(
     bx=bx, by=by, bz=bz,
     dx=dx_profile, dy=dy_profile, dz=dz_profile,
-    icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-    lcen_bln=151, lx_bln=301, margin=0,
+    seed_i=icen, seed_j=jcen, seed_k=kcen,
+    line_center=151, line_length=301, margin=0,
 )
-# result.i/j/k : traced grid indices, shape (n_seeds, lx_bln)
+# result.i/j/k : traced grid indices, shape (n_seeds, line_length)
 ```
 
 Orthogonal curvilinear coordinates:
@@ -29,14 +29,20 @@ Orthogonal curvilinear coordinates:
 from wind3d_field_lines import trace_field_lines_curvilinear
 
 result = trace_field_lines_curvilinear(
-    bxi=bxi, bet=bet, bzt=bzt,
+    b_xi=b_xi, b_eta=b_eta, b_zeta=b_zeta,
     dxi=dxi, det=det, dzt=dzt,
     hxi=hxi, het=het, hzt=hzt,
-    icen_bln=icen, jcen_bln=jcen, kcen_bln=kcen,
-    lcen_bln=151, lx_bln=301, margin=0,
+    seed_i=icen, seed_j=jcen, seed_k=kcen,
+    line_center=151, line_length=301, margin=0,
 )
-# result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, lx_bln)
+# result.xi/eta/zeta : traced physical coordinates, shape (n_seeds, line_length)
 ```
+
+Breaking changes in 0.2.0:
+
+- Tracing APIs are keyword-only.
+- Legacy `*_bln` argument names were removed.
+- Result metadata fields are now `line_center`, `num_lines`, and `line_length`.
 
 Potential field extrapolation:
 
