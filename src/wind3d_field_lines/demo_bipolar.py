@@ -114,6 +114,45 @@ def _to_physical(
     return vmin + (values - 1.0) * step
 
 
+def _domain_segment(
+    xv: NDArray[np.float64],
+    yv: NDArray[np.float64],
+    center: int,
+    x_min: float,
+    x_max: float,
+    y_min: float,
+    y_max: float,
+) -> tuple[int, int]:
+    """Return ``[a, b]``: the contiguous in-domain segment containing *center*.
+
+    Parameters
+    ----------
+    xv, yv:
+        Physical x and y coordinates along the traced line (1-D).
+    center:
+        0-based index of the seed point within *xv* / *yv*.
+    x_min, x_max, y_min, y_max:
+        Domain bounds.
+
+    Returns
+    -------
+    tuple[int, int]
+        Inclusive ``[a, b]`` range, or ``(-1, -1)`` if the centre itself is
+        outside the domain.
+    """
+    in_domain = (xv >= x_min) & (xv <= x_max) & (yv >= y_min) & (yv <= y_max)
+    if not in_domain[center]:
+        return -1, -1
+
+    out_idx = np.where(~in_domain)[0]
+    before = out_idx[out_idx < center]
+    after = out_idx[out_idx > center]
+
+    a = int(before[-1]) + 1 if len(before) else 0
+    b = int(after[0]) - 1 if len(after) else len(xv) - 1
+    return a, b
+
+
 def run_demo(config: BipolarDemoConfig) -> None:
     """Extrapolate the potential field and visualize traced field lines.
 
@@ -199,34 +238,38 @@ def run_demo(config: BipolarDemoConfig) -> None:
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection="3d")
 
-    # Surface field (z = 0 plane)
-    xx, yy = np.meshgrid(x, y, indexing="ij")
-    vmax = float(np.abs(b3_bottom).max())
-    cf = ax.contourf(
-        xx,
-        yy,
-        b3_bottom,
-        levels=30,
-        zdir="z",
-        offset=0.0,
-        cmap="RdBu_r",
-        vmin=-vmax,
-        vmax=vmax,
-        alpha=0.85,
-    )
-    fig.colorbar(cf, ax=ax, shrink=0.5, pad=0.1, label="$B_z$ [G]")
-
-    # Field lines
+    # Field lines — clip each traced line to the horizontal domain so that
+    # periodic wrap-around artefacts are not plotted.
     valid_line_count = 0
     for n in range(result.nx):
         lmin = int(max(1, result.lmin[n]))
         lmax = int(min(result.lx, result.lmax[n]))
         if lmax - lmin + 1 < 2:
             continue
+
+        sl = slice(lmin - 1, lmax)
+        xv = x_line[n, sl]
+        yv = y_line[n, sl]
+        zv = z_line[n, sl]
+
+        # Centre index within this slice
+        center = max(0, min(len(xv) - 1, config.lcen_bln - lmin))
+        a, b = _domain_segment(
+            xv,
+            yv,
+            center,
+            config.x_min,
+            config.x_max,
+            config.y_min,
+            config.y_max,
+        )
+        if b - a + 1 < 2:
+            continue
+
         ax.plot(
-            x_line[n, lmin - 1 : lmax],
-            y_line[n, lmin - 1 : lmax],
-            z_line[n, lmin - 1 : lmax],
+            xv[a : b + 1],
+            yv[a : b + 1],
+            zv[a : b + 1],
             color="royalblue",
             linewidth=1.2,
         )
