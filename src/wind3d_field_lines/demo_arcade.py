@@ -121,18 +121,13 @@ def _to_physical(
     return vmin + (values - 1.0) * step
 
 
-def run_demo(config: ArcadeDemoConfig) -> int:
+def run_demo(config: ArcadeDemoConfig) -> None:
     """Trace field lines and visualize with matplotlib 3D.
 
     Parameters
     ----------
     config:
         Demo configuration parameters.
-
-    Returns
-    -------
-    int
-        Exit code (0 on success).
     """
     import matplotlib
     import matplotlib.pyplot as plt
@@ -252,4 +247,3 @@ def run_demo(config: ArcadeDemoConfig) -> int:
         plt.show()
 
     plt.close(fig)
-    return 0
