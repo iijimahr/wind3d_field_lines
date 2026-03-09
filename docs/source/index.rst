@@ -27,7 +27,7 @@ Installation
 
 .. code-block:: bash
 
-   pip install -e .
+   pip install git+https://github.com/iijimahr/wind3d_field_lines.git
 
 Quick start
 ===========
