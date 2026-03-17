@@ -24,23 +24,23 @@ The divergence-free condition :math:`\nabla\cdot\mathbf{B}=0` then requires
 
 Boundary conditions:
 
-- **Lower boundary** (:math:`\xi_3 = 0`): the normal component of the
-  surface magnetic field is prescribed, :math:`B_3 = B_0(\xi_1, \xi_2)`.
-- **Upper boundary** (:math:`\xi_3 = L_3`): the horizontal field vanishes,
+- **Lower boundary** (:math:`\zeta = 0`): the normal component of the
+  surface magnetic field is prescribed, :math:`B_\zeta = B_0(\xi, \eta)`.
+- **Upper boundary** (:math:`\zeta = L_\zeta`): the horizontal field vanishes,
   :math:`\mathbf{B}_h = 0`.
 
 Coordinate system
 -----------------
 
-An orthogonal curvilinear coordinate system :math:`(\xi_1, \xi_2, \xi_3)` is
-assumed with scale factors :math:`h_j(\xi_3)` that depend only on
-:math:`\xi_3`.  Both horizontal directions are periodic.  Special cases:
+An orthogonal curvilinear coordinate system :math:`(\xi, \eta, \zeta)` is
+assumed with scale factors :math:`h_j(\zeta)` that depend only on
+:math:`\zeta`.  Both horizontal directions are periodic.  Special cases:
 
 - **Cartesian**: :math:`h_j = 1`.
 - **Local spherical** (Iijima et al. 2023):
-  :math:`h_1 = h_2 = r\sqrt{f}`, :math:`h_3 = 1`.
+  :math:`h_\xi = h_\eta = r\sqrt{f}`, :math:`h_\zeta = 1`.
 
-The Jacobian is :math:`J = 1/(h_1 h_2 h_3)`, and the Laplacian is
+The Jacobian is :math:`J = 1/(h_\xi h_\eta h_\zeta)`, and the Laplacian is
 
 .. math::
 
@@ -56,78 +56,78 @@ Fourier modes.  Writing
 
 .. math::
 
-   \Psi(\xi_1,\xi_2,\xi_3)
-   = \mathcal{F}^{-1}\!\left\{A(k_1,k_2)\,f(k_1,k_2,\xi_3)\right\},
+   \Psi(\xi,\eta,\zeta)
+   = \mathcal{F}^{-1}\!\left\{A(k_\xi,k_\eta)\,f(k_\xi,k_\eta,\zeta)\right\},
 
-where :math:`A(k_1,k_2) = \mathcal{F}\{B_3(\xi_1,\xi_2,0)\}` is the FFT of
+where :math:`A(k_\xi,k_\eta) = \mathcal{F}\{B_\zeta(\xi,\eta,0)\}` is the FFT of
 the surface field, the Laplace equation reduces to an independent 1-D ODE for
-each wavenumber pair :math:`(k_1,k_2)`:
+each wavenumber pair :math:`(k_\xi,k_\eta)`:
 
 .. math::
 
-   J \frac{\partial}{\partial \xi_3}
-   \!\left(\frac{1}{J h_3^2} \frac{\partial f}{\partial \xi_3}\right)
-   - \left(\frac{k_1^2}{h_1^2} + \frac{k_2^2}{h_2^2}\right) f = 0.
+   J \frac{\partial}{\partial \zeta}
+   \!\left(\frac{1}{J h_\zeta^2} \frac{\partial f}{\partial \zeta}\right)
+   - \left(\frac{k_\xi^2}{h_\xi^2} + \frac{k_\eta^2}{h_\eta^2}\right) f = 0.
 
 Boundary conditions for :math:`f`:
 
 .. math::
 
-   \frac{\partial f}{\partial \xi_3} = -h_3 \quad (\xi_3 = 0), \qquad
-   f = 0 \quad (\xi_3 = L_3).
+   \frac{\partial f}{\partial \zeta} = -h_\zeta \quad (\zeta = 0), \qquad
+   f = 0 \quad (\zeta = L_\zeta).
 
 The magnetic field components are then recovered as
 
 .. math::
 
-   B_1 = \mathcal{F}^{-1}\!\left\{-ik_1 A f\right\} / h_1, \qquad
-   B_2 = \mathcal{F}^{-1}\!\left\{-ik_2 A f\right\} / h_2, \qquad
-   B_3 = \mathcal{F}^{-1}\!\left\{-A\,\partial f/\partial\xi_3\right\} / h_3.
+   B_\xi = \mathcal{F}^{-1}\!\left\{-ik_\xi A f\right\} / h_\xi, \qquad
+   B_\eta = \mathcal{F}^{-1}\!\left\{-ik_\eta A f\right\} / h_\eta, \qquad
+   B_\zeta = \mathcal{F}^{-1}\!\left\{-A\,\partial f/\partial\zeta\right\} / h_\zeta.
 
 Discretisation
 --------------
 
-Grid points are placed at :math:`\xi_{3,k} = k\,\Delta\xi_3`
-(:math:`k = 0, \ldots, N_3-1`) with
+Grid points are placed at :math:`\zeta_k = k\,\Delta\zeta`
+(:math:`k = 0, \ldots, N_\zeta-1`) with
 
 .. math::
 
-   \Delta\xi_3 = \frac{L_3}{N_3 - 1/2}.
+   \Delta\zeta = \frac{L_\zeta}{N_\zeta - 1/2}.
 
 The ODE is discretised with a finite-volume scheme at interior points:
 
 .. math::
 
-   \frac{J_k}{\Delta\xi_3}
+   \frac{J_k}{\Delta\zeta}
    \left(
-     \frac{f_{k+1}-f_k}{J_{k+1/2}\,h_{3,k+1/2}^2\,\Delta\xi_3}
-     - \frac{f_k-f_{k-1}}{J_{k-1/2}\,h_{3,k-1/2}^2\,\Delta\xi_3}
+     \frac{f_{k+1}-f_k}{J_{k+1/2}\,h_{\zeta,k+1/2}^2\,\Delta\zeta}
+     - \frac{f_k-f_{k-1}}{J_{k-1/2}\,h_{\zeta,k-1/2}^2\,\Delta\zeta}
    \right)
-   - \left(\frac{k_1^2}{h_{1,k}^2} + \frac{k_2^2}{h_{2,k}^2}\right) f_k = 0.
+   - \left(\frac{k_\xi^2}{h_{\xi,k}^2} + \frac{k_\eta^2}{h_{\eta,k}^2}\right) f_k = 0.
 
 Quantities at half-integer points are linearly interpolated from the adjacent
 grid points.  Ghost-cell values encode the boundary conditions:
 
 - **Lower** (:math:`k = -1`):
-  :math:`f_{-1} = f_1 + 2\,h_{3,0}\,\Delta\xi_3`
-- **Upper** (:math:`k = N_3`):
-  :math:`f_{N_3} = -f_{N_3-1}`
+  :math:`f_{-1} = f_1 + 2\,h_{\zeta,0}\,\Delta\zeta`
+- **Upper** (:math:`k = N_\zeta`):
+  :math:`f_{N_\zeta} = -f_{N_\zeta-1}`
 
 The resulting tridiagonal system is solved with the Thomas (TDMA) algorithm,
-vectorised simultaneously over all :math:`(k_1,k_2)` wavenumber pairs.
+vectorised simultaneously over all :math:`(k_\xi,k_\eta)` wavenumber pairs.
 
 Analytical solution (Cartesian)
 ---------------------------------
 
 For Cartesian coordinates (:math:`h_j = 1`) and a single horizontal mode
-with :math:`\kappa = \sqrt{k_1^2 + k_2^2}`:
+with :math:`\kappa = \sqrt{k_\xi^2 + k_\eta^2}`:
 
 .. math::
 
-   f(\xi_3) =
+   f(\zeta) =
    \begin{cases}
-     L_3 - \xi_3 & (\kappa = 0), \\[4pt]
-     \dfrac{\sinh\!\left(\kappa(L_3-\xi_3)\right)}{\kappa\cosh(\kappa L_3)}
+     L_\zeta - \zeta & (\kappa = 0), \\[4pt]
+     \dfrac{\sinh\!\left(\kappa(L_\zeta-\zeta)\right)}{\kappa\cosh(\kappa L_\zeta)}
      & (\kappa \neq 0).
    \end{cases}
 

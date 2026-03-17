@@ -46,10 +46,10 @@ Step-by-step example
    x = np.linspace(-60.0, 60.0, 128)
    y = np.linspace(-60.0, 60.0, 128)
 
-   b3_bottom = build_bipolar_surface_field(
+   bzt_bottom = build_bipolar_surface_field(
        b0=100.0, sigma=8.0, spot_distance=20.0, x=x, y=y
    )
-   print(b3_bottom.shape)  # (128, 128)
+   print(bzt_bottom.shape)  # (128, 128)
 
 **2. Extrapolate the potential field**
 
@@ -58,19 +58,19 @@ Step-by-step example
    from wind3d_field_lines import compute_potential_field
 
    nz = 64
-   l3 = 60.0              # domain height [Mm]
+   lzt = 60.0              # domain height [Mm]
    dxi = float(x[1] - x[0])
    det = float(y[1] - y[0])
 
-   b1, b2, b3 = compute_potential_field(
-       b3_bottom=b3_bottom,
+   bxi, bet, bzt = compute_potential_field(
+       bzt_bottom=bzt_bottom,
        dxi=dxi, det=det,
-       l3=l3, n3=nz,
+       lzt=lzt, kx=nz,
        hxi=np.ones(nz),   # Cartesian: h = 1
        het=np.ones(nz),
        hzt=np.ones(nz),
    )
-   print(b3.shape)  # (128, 128, 64)
+   print(bzt.shape)  # (128, 128, 64)
 
 **3. Trace field lines from the positive polarity**
 
@@ -78,7 +78,7 @@ Step-by-step example
 
    from wind3d_field_lines import trace_field_lines
 
-   dz_step = l3 / (nz - 0.5)
+   dz_step = lzt / (nz - 0.5)
    dx_profile = np.full(nz, dxi)
    dy_profile = np.full(nz, det)
    dz_profile = np.full(nz, dz_step)
@@ -93,7 +93,7 @@ Step-by-step example
    kcen = seed_z / dz_step + 1.0
 
    result = trace_field_lines(
-       bx=b1, by=b2, bz=b3,
+       bx=bxi, by=bet, bz=bzt,
        dx=dx_profile, dy=dy_profile, dz=dz_profile,
        seed_i=icen, seed_j=jcen, seed_k=kcen,
        line_center=301, line_length=601, margin=0,
@@ -113,8 +113,8 @@ Step-by-step example
    ax = fig.add_subplot(111, projection="3d")
 
    xx, yy = np.meshgrid(x, y, indexing="ij")
-   vmax = float(np.abs(b3_bottom).max())
-   ax.contourf(xx, yy, b3_bottom, levels=30,
+   vmax = float(np.abs(bzt_bottom).max())
+   ax.contourf(xx, yy, bzt_bottom, levels=30,
                zdir="z", offset=0.0, cmap="RdBu_r",
                vmin=-vmax, vmax=vmax, alpha=0.85)
 

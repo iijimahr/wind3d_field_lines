@@ -29,7 +29,7 @@ class BipolarDemoConfig:
     x_max: float = 60.0
     y_min: float = -60.0
     y_max: float = 60.0
-    l3: float = 60.0
+    lzt: float = 60.0
 
     # Seed / tracing parameters
     seed_count: int = 30
@@ -174,7 +174,7 @@ def run_demo(config: BipolarDemoConfig) -> None:
     det = _uniform_spacing(y, "y")
 
     # --- Surface boundary field ---
-    b3_bottom = build_bipolar_surface_field(
+    bzt_bottom = build_bipolar_surface_field(
         b0=config.b0,
         sigma=config.sigma,
         spot_distance=config.spot_distance,
@@ -183,16 +183,16 @@ def run_demo(config: BipolarDemoConfig) -> None:
     )
 
     # --- Potential field extrapolation ---
-    # The vertical grid uses dz = l3 / (nz - 0.5) with z_k = k * dz.
-    dz_step = config.l3 / (config.nz - 0.5)
+    # The vertical grid uses dz = lzt / (nz - 0.5) with z_k = k * dz.
+    dz_step = config.lzt / (config.nz - 0.5)
     hones = np.ones(config.nz, dtype=np.float64)
 
-    b1, b2, b3 = compute_potential_field(
-        b3_bottom=b3_bottom,
+    bxi, bet, bzt = compute_potential_field(
+        bzt_bottom=bzt_bottom,
         dxi=dxi,
         det=det,
-        l3=config.l3,
-        n3=config.nz,
+        lzt=config.lzt,
+        kx=config.nz,
         hxi=hones,
         het=hones,
         hzt=hones,
@@ -224,9 +224,9 @@ def run_demo(config: BipolarDemoConfig) -> None:
     kcen = _to_index(seed_z, 0.0, dz_step)
 
     result = trace_field_lines(
-        bx=b1,
-        by=b2,
-        bz=b3,
+        bx=bxi,
+        by=bet,
+        bz=bzt,
         dx=dx_profile,
         dy=dy_profile,
         dz=dz_profile,
@@ -299,7 +299,7 @@ def run_demo(config: BipolarDemoConfig) -> None:
     ax.set_ylabel("y [Mm]")
     ax.set_zlabel("z [Mm]")
     ax.set_title("Bipolar sunspot — potential field lines")
-    ax.set_zlim(0.0, config.l3)
+    ax.set_zlim(0.0, config.lzt)
 
     print(
         "Demo summary: "

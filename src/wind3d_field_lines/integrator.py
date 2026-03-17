@@ -138,9 +138,9 @@ def trace_field_lines(
 
 def trace_field_lines_curvilinear(
     *,
-    b_xi: NDArray[np.floating[Any]],
-    b_et: NDArray[np.floating[Any]],
-    b_zt: NDArray[np.floating[Any]],
+    bxi: NDArray[np.floating[Any]],
+    bet: NDArray[np.floating[Any]],
+    bzt: NDArray[np.floating[Any]],
     dxi: float,
     det: float,
     dzt: float,
@@ -164,8 +164,8 @@ def trace_field_lines_curvilinear(
 
     Parameters
     ----------
-    b_xi, b_et, b_zt:
-        Physical components of the magnetic field (B_xi, B_et, B_zt) with
+    bxi, bet, bzt:
+        Physical components of the magnetic field (B_xi, B_eta, B_zeta) with
         shape ``(ix, jx, kx)``.
     dxi, det, dzt:
         Uniform grid spacing in the xi, eta, and zeta directions (scalars).
@@ -198,14 +198,14 @@ def trace_field_lines_curvilinear(
         If the compiled Fortran extension is not available.
     """
 
-    b_xi64 = _as_float64_array("b_xi", b_xi, ndim=3)
-    b_et64 = _as_float64_array("b_et", b_et, ndim=3)
-    b_zt64 = _as_float64_array("b_zt", b_zt, ndim=3)
+    bxi64 = _as_float64_array("bxi", bxi, ndim=3)
+    bet64 = _as_float64_array("bet", bet, ndim=3)
+    bzt64 = _as_float64_array("bzt", bzt, ndim=3)
 
-    if b_xi64.shape != b_et64.shape or b_xi64.shape != b_zt64.shape:
-        raise ValueError("b_xi, b_et, and b_zt must have the same shape.")
+    if bxi64.shape != bet64.shape or bxi64.shape != bzt64.shape:
+        raise ValueError("bxi, bet, and bzt must have the same shape.")
 
-    _, _, kx = b_xi64.shape
+    _, _, kx = bxi64.shape
 
     hxi64 = _as_float64_array("hxi", hxi, ndim=1)
     het64 = _as_float64_array("het", het, ndim=1)
@@ -226,10 +226,10 @@ def trace_field_lines_curvilinear(
 
     # Scale the magnetic field components.
     # From the theory: B_tilde_xi = h_eta * h_zeta * B_xi, etc.
-    # hxi64 has shape (kx,) and broadcasts against b_xi64 of shape (ix, jx, kx).
-    b_tilde_xi = b_xi64 * (het64 * hzt64)
-    b_tilde_et = b_et64 * (hzt64 * hxi64)
-    b_tilde_zt = b_zt64 * (hxi64 * het64)
+    # hxi64 has shape (kx,) and broadcasts against bxi64 of shape (ix, jx, kx).
+    b_tilde_xi = bxi64 * (het64 * hzt64)
+    b_tilde_et = bet64 * (hzt64 * hxi64)
+    b_tilde_zt = bzt64 * (hxi64 * het64)
 
     dx_arr = np.full(kx, dxi_f)
     dy_arr = np.full(kx, det_f)

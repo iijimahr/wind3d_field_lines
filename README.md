@@ -29,7 +29,7 @@ Orthogonal curvilinear coordinates:
 from wind3d_field_lines import trace_field_lines_curvilinear
 
 result = trace_field_lines_curvilinear(
-    b_xi=b_xi, b_et=b_et, b_zt=b_zt,
+    bxi=bxi, bet=bet, bzt=bzt,
     dxi=dxi, det=det, dzt=dzt,
     hxi=hxi, het=het, hzt=hzt,
     seed_i=icen, seed_j=jcen, seed_k=kcen,
@@ -50,18 +50,18 @@ Potential field extrapolation:
 from wind3d_field_lines import compute_potential_field
 import numpy as np
 
-n1, n2, n3 = 64, 64, 32
-l3 = 20.0  # domain height [Mm]
+ix, jx, kx = 64, 64, 32
+lzt = 20.0  # domain height [Mm]
 
 # Surface normal field (lower boundary)
-b3_bottom = ...  # shape (n1, n2)
+bzt_bottom = ...  # shape (ix, jx)
 
-b1, b2, b3 = compute_potential_field(
-    b3_bottom=b3_bottom,
-    dxi=1.0, det=1.0, l3=l3, n3=n3,
-    hxi=np.ones(n3), het=np.ones(n3), hzt=np.ones(n3),  # Cartesian
+bxi, bet, bzt = compute_potential_field(
+    bzt_bottom=bzt_bottom,
+    dxi=1.0, det=1.0, lzt=lzt, kx=kx,
+    hxi=np.ones(kx), het=np.ones(kx), hzt=np.ones(kx),  # Cartesian
 )
-# b1/b2/b3 : magnetic field components, shape (n1, n2, n3)
+# bxi/bet/bzt : magnetic field components, shape (ix, jx, kx)
 ```
 
 ## Demo

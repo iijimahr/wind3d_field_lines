@@ -13,18 +13,18 @@ from wind3d_field_lines.potential_field import _thomas_solve
 # ---------------------------------------------------------------------------
 
 
-def _cartesian_h(n3: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _cartesian_h(kx: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return unit scale factors (Cartesian coordinates)."""
-    ones = np.ones(n3)
+    ones = np.ones(kx)
     return ones.copy(), ones.copy(), ones.copy()
 
 
-def _make_grid(n1: int, n2: int, n3: int, l3: float):
-    """Return (dxi, det, l3, n3, hxi, het, hzt) for Cartesian domain."""
+def _make_grid(ix: int, jx: int, kx: int, lzt: float):
+    """Return (dxi, det, lzt, kx, hxi, het, hzt) for Cartesian domain."""
     dxi = 1.0
     det = 1.0
-    hxi, het, hzt = _cartesian_h(n3)
-    return dxi, det, l3, n3, hxi, het, hzt
+    hxi, het, hzt = _cartesian_h(kx)
+    return dxi, det, lzt, kx, hxi, het, hzt
 
 
 # ---------------------------------------------------------------------------
@@ -33,141 +33,141 @@ def _make_grid(n1: int, n2: int, n3: int, l3: float):
 
 
 class TestCartesianUniformField:
-    """Constant surface field => B3 = const, B1 = B2 = 0 everywhere."""
+    """Constant surface field => bzt = const, bxi = bet = 0 everywhere."""
 
-    def test_b3_equals_boundary(self):
-        n1, n2, n3 = 8, 8, 16
-        l3 = 10.0
-        dxi, det, l3, n3, hxi, het, hzt = _make_grid(n1, n2, n3, l3)
-        b3_bottom = np.ones((n1, n2)) * 3.7
+    def test_bzt_equals_boundary(self):
+        ix, jx, kx = 8, 8, 16
+        lzt = 10.0
+        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        bzt_bottom = np.ones((ix, jx)) * 3.7
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        np.testing.assert_allclose(b3, 3.7, atol=1e-10)
+        np.testing.assert_allclose(bzt, 3.7, atol=1e-10)
 
-    def test_b1_b2_zero(self):
-        n1, n2, n3 = 8, 8, 16
-        l3 = 10.0
-        dxi, det, l3, n3, hxi, het, hzt = _make_grid(n1, n2, n3, l3)
-        b3_bottom = np.ones((n1, n2)) * 2.5
+    def test_bxi_bet_zero(self):
+        ix, jx, kx = 8, 8, 16
+        lzt = 10.0
+        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        bzt_bottom = np.ones((ix, jx)) * 2.5
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        np.testing.assert_allclose(b1, 0.0, atol=1e-10)
-        np.testing.assert_allclose(b2, 0.0, atol=1e-10)
+        np.testing.assert_allclose(bxi, 0.0, atol=1e-10)
+        np.testing.assert_allclose(bet, 0.0, atol=1e-10)
 
     def test_output_shape(self):
-        n1, n2, n3 = 6, 10, 12
-        l3 = 5.0
-        dxi, det, l3, n3, hxi, het, hzt = _make_grid(n1, n2, n3, l3)
-        b3_bottom = np.ones((n1, n2))
+        ix, jx, kx = 6, 10, 12
+        lzt = 5.0
+        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        bzt_bottom = np.ones((ix, jx))
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        assert b1.shape == (n1, n2, n3)
-        assert b2.shape == (n1, n2, n3)
-        assert b3.shape == (n1, n2, n3)
+        assert bxi.shape == (ix, jx, kx)
+        assert bet.shape == (ix, jx, kx)
+        assert bzt.shape == (ix, jx, kx)
 
 
 class TestCartesianAnalyticalSingleMode:
-    """Single Fourier mode in xi1 only; compare B3 with the sinh analytical solution.
+    """Single Fourier mode in xi1 only; compare bzt with the sinh analytical solution.
 
-    For Cartesian coordinates with b3_bottom = sin(k1*xi1) and all other
+    For Cartesian coordinates with bzt_bottom = sin(k1*xi1) and all other
     wavenumbers zero:
-        f(xi3) = sinh(kappa*(l3 - xi3)) / (kappa * cosh(kappa*l3))
-        B3(xi1, xi3) = sin(k1*xi1) * cosh(kappa*(l3-xi3)) / cosh(kappa*l3)
+        f(xi3) = sinh(kappa*(lzt - xi3)) / (kappa * cosh(kappa*lzt))
+        bzt(xi1, xi3) = sin(k1*xi1) * cosh(kappa*(lzt-xi3)) / cosh(kappa*lzt)
     where kappa = |k1|.
     """
 
-    @pytest.mark.parametrize("n3", [32, 64])
-    def test_b3_matches_analytical(self, n3: int):
-        n1 = 32
-        l3 = 20.0
+    @pytest.mark.parametrize("kx", [32, 64])
+    def test_bzt_matches_analytical(self, kx: int):
+        ix = 32
+        lzt = 20.0
         dxi = 1.0
         det = 1.0
-        hxi, het, hzt = _cartesian_h(n3)
+        hxi, het, hzt = _cartesian_h(kx)
 
-        dz = l3 / (n3 - 0.5)
-        xi3 = np.arange(n3) * dz  # (n3,)
-        k1_phys = 2.0 * np.pi / (n1 * dxi)  # fundamental mode
-        xi1 = np.arange(n1) * dxi  # (n1,)
+        dz = lzt / (kx - 0.5)
+        xi3 = np.arange(kx) * dz  # (kx,)
+        k1_phys = 2.0 * np.pi / (ix * dxi)  # fundamental mode
+        xi1 = np.arange(ix) * dxi  # (ix,)
 
-        b3_bottom = np.sin(k1_phys * xi1)[:, None]  # (n1, 1)
+        bzt_bottom = np.sin(k1_phys * xi1)[:, None]  # (ix, 1)
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
         kappa = k1_phys
-        b3_analytical = (
+        bzt_analytical = (
             np.sin(k1_phys * xi1)[:, None, None]
-            * (np.cosh(kappa * (l3 - xi3)) / np.cosh(kappa * l3))[None, None, :]
-        )  # (n1, 1, n3)
+            * (np.cosh(kappa * (lzt - xi3)) / np.cosh(kappa * lzt))[None, None, :]
+        )  # (ix, 1, kx)
 
         # Second-order FD scheme => error ~ dz^2
-        np.testing.assert_allclose(b3, b3_analytical, atol=5e-4)
+        np.testing.assert_allclose(bzt, bzt_analytical, atol=5e-4)
 
 
 class TestFluxConservation:
-    """Horizontally integrated B3 must equal the surface integral at all heights."""
+    """Horizontally integrated bzt must equal the surface integral at all heights."""
 
     def test_flux_conserved(self):
         rng = np.random.default_rng(42)
-        n1, n2, n3 = 16, 16, 20
-        l3 = 8.0
-        dxi, det, _, _, hxi, het, hzt = _make_grid(n1, n2, n3, l3)
+        ix, jx, kx = 16, 16, 20
+        lzt = 8.0
+        dxi, det, _, _, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
 
-        b3_bottom = rng.standard_normal((n1, n2))
+        bzt_bottom = rng.standard_normal((ix, jx))
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        flux_bottom = b3_bottom.sum()
-        for k in range(n3):
+        flux_bottom = bzt_bottom.sum()
+        for k in range(kx):
             np.testing.assert_allclose(
-                b3[:, :, k].sum(),
+                bzt[:, :, k].sum(),
                 flux_bottom,
                 rtol=1e-10,
                 err_msg=f"Flux not conserved at level k={k}",
@@ -175,76 +175,76 @@ class TestFluxConservation:
 
 
 class TestUpperBoundaryCondition:
-    """Horizontal field (B1, B2) should vanish at xi3 = l3.
+    """Horizontal field (bxi, bet) should vanish at xi3 = lzt.
 
     The discrete scheme enforces f = 0 at the half-integer point
-    xi3 = l3.  The last interior grid point is at xi3 = (n3-1)*dz,
-    which differs from l3 by dz/2.  For large n3 the horizontal field
+    xi3 = lzt.  The last interior grid point is at xi3 = (kx-1)*dz,
+    which differs from lzt by dz/2.  For large kx the horizontal field
     at the last interior level is O(kappa * dz / 2) smaller than the
     surface amplitude.
     """
 
-    def test_b1_b2_small_at_top(self):
+    def test_bxi_bet_small_at_top(self):
         rng = np.random.default_rng(7)
-        n1, n2, n3 = 16, 16, 64
-        l3 = 20.0
-        dxi, det, _, _, hxi, het, hzt = _make_grid(n1, n2, n3, l3)
-        b3_bottom = rng.standard_normal((n1, n2))
+        ix, jx, kx = 16, 16, 64
+        lzt = 20.0
+        dxi, det, _, _, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        bzt_bottom = rng.standard_normal((ix, jx))
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        amp = np.abs(b3_bottom).max()
-        assert np.abs(b1[:, :, -1]).max() < 0.1 * amp
-        assert np.abs(b2[:, :, -1]).max() < 0.1 * amp
+        amp = np.abs(bzt_bottom).max()
+        assert np.abs(bxi[:, :, -1]).max() < 0.1 * amp
+        assert np.abs(bet[:, :, -1]).max() < 0.1 * amp
 
 
 class TestPotentialCondition:
     """For a potential field curl B = 0 (within numerical discretisation error)."""
 
     def test_curl_b_small(self):
-        n1, n2, n3 = 16, 16, 32
-        l3 = 10.0
+        ix, jx, kx = 16, 16, 32
+        lzt = 10.0
         dxi = 1.0
         det = 1.0
-        hxi, het, hzt = _cartesian_h(n3)
+        hxi, het, hzt = _cartesian_h(kx)
 
         rng = np.random.default_rng(99)
-        b3_bottom = rng.standard_normal((n1, n2))
+        bzt_bottom = rng.standard_normal((ix, jx))
 
-        b1, b2, b3 = compute_potential_field(
-            b3_bottom=b3_bottom,
+        bxi, bet, bzt = compute_potential_field(
+            bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            l3=l3,
-            n3=n3,
+            lzt=lzt,
+            kx=kx,
             hxi=hxi,
             het=het,
             hzt=hzt,
         )
 
-        # Estimate (curl B)_z = dB2/dxi1 - dB1/dxi2 in interior
+        # Estimate (curl B)_z = d(bet)/dxi1 - d(bxi)/dxi2 in interior
         # Use FFT for horizontal derivatives (exact)
-        B1_fft = np.fft.fft2(b1, axes=(0, 1))
-        B2_fft = np.fft.fft2(b2, axes=(0, 1))
-        k1 = 2.0 * np.pi * np.fft.fftfreq(n1) / dxi
-        k2 = 2.0 * np.pi * np.fft.fftfreq(n2) / det
+        bxi_fft = np.fft.fft2(bxi, axes=(0, 1))
+        bet_fft = np.fft.fft2(bet, axes=(0, 1))
+        k1 = 2.0 * np.pi * np.fft.fftfreq(ix) / dxi
+        k2 = 2.0 * np.pi * np.fft.fftfreq(jx) / det
         curl_z = np.real(
             np.fft.ifft2(
-                1j * k1[:, None, None] * B2_fft - 1j * k2[None, :, None] * B1_fft,
+                1j * k1[:, None, None] * bet_fft - 1j * k2[None, :, None] * bxi_fft,
                 axes=(0, 1),
             )
-        )  # (n1, n2, n3)
+        )  # (ix, jx, kx)
 
-        amp = np.abs(b3_bottom).max()
+        amp = np.abs(bzt_bottom).max()
         # Curl should be negligible compared to field amplitude
         assert np.abs(curl_z).max() < 1e-10 * amp
 
@@ -256,21 +256,21 @@ class TestPotentialCondition:
 
 class TestInputValidation:
     def _default_args(self):
-        n1, n2, n3 = 4, 4, 8
+        ix, jx, kx = 4, 4, 8
         return dict(
-            b3_bottom=np.ones((n1, n2)),
+            bzt_bottom=np.ones((ix, jx)),
             dxi=1.0,
             det=1.0,
-            l3=5.0,
-            n3=n3,
-            hxi=np.ones(n3),
-            het=np.ones(n3),
-            hzt=np.ones(n3),
+            lzt=5.0,
+            kx=kx,
+            hxi=np.ones(kx),
+            het=np.ones(kx),
+            hzt=np.ones(kx),
         )
 
-    def test_b3_bottom_not_2d(self):
+    def test_bzt_bottom_not_2d(self):
         args = self._default_args()
-        args["b3_bottom"] = np.ones(4)
+        args["bzt_bottom"] = np.ones(4)
         with pytest.raises(ValueError, match="2D"):
             compute_potential_field(**args)
 
@@ -292,27 +292,27 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="positive"):
             compute_potential_field(**args)
 
-    def test_non_positive_l3(self):
+    def test_non_positive_lzt(self):
         args = self._default_args()
-        args["l3"] = -1.0
+        args["lzt"] = -1.0
         with pytest.raises(ValueError, match="positive"):
             compute_potential_field(**args)
 
-    def test_n3_too_small(self):
+    def test_kx_too_small(self):
         args = self._default_args()
-        args["n3"] = 1
+        args["kx"] = 1
         args["hxi"] = np.ones(1)
         args["het"] = np.ones(1)
         args["hzt"] = np.ones(1)
-        with pytest.raises(ValueError, match="n3"):
+        with pytest.raises(ValueError, match="kx"):
             compute_potential_field(**args)
 
     def test_float32_input_accepted(self):
         args = self._default_args()
-        args["b3_bottom"] = args["b3_bottom"].astype(np.float32)
+        args["bzt_bottom"] = args["bzt_bottom"].astype(np.float32)
         args["hxi"] = args["hxi"].astype(np.float32)
-        b1, b2, b3 = compute_potential_field(**args)
-        assert b1.dtype == np.float64
+        bxi, bet, bzt = compute_potential_field(**args)
+        assert bxi.dtype == np.float64
 
 
 # ---------------------------------------------------------------------------

@@ -37,9 +37,9 @@ def test_cartesian_identity() -> None:
     bxi, bet, bzt, hxi, het, hzt, icen, jcen, kcen = _build_uniform_curvilinear_case()
 
     result = trace_field_lines_curvilinear(
-        b_xi=bxi,
-        b_et=bet,
-        b_zt=bzt,
+        bxi=bxi,
+        bet=bet,
+        bzt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -68,9 +68,9 @@ def test_uniform_scale_factor_geometry() -> None:
     kx = bxi.shape[2]
 
     common_kwargs = dict(
-        b_xi=bxi,
-        b_et=bet,
-        b_zt=bzt,
+        bxi=bxi,
+        bet=bet,
+        bzt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -107,9 +107,9 @@ def test_output_type_and_shape() -> None:
     bxi, bet, bzt, hxi, het, hzt, icen, jcen, kcen = _build_uniform_curvilinear_case()
 
     result = trace_field_lines_curvilinear(
-        b_xi=bxi,
-        b_et=bet,
-        b_zt=bzt,
+        bxi=bxi,
+        bet=bet,
+        bzt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -140,9 +140,9 @@ def test_float32_input_accepted() -> None:
     )
 
     result = trace_field_lines_curvilinear(
-        b_xi=bxi,
-        b_et=bet,
-        b_zt=bzt,
+        bxi=bxi,
+        bet=bet,
+        bzt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -174,9 +174,9 @@ def test_varying_scale_factor_in_zeta() -> None:
     hzt = np.linspace(1.0, 2.0, kx)
 
     result = trace_field_lines_curvilinear(
-        b_xi=bxi,
-        b_et=bet,
-        b_zt=bzt,
+        bxi=bxi,
+        bet=bet,
+        bzt=bzt,
         dxi=1.0,
         det=1.0,
         dzt=1.0,
@@ -204,9 +204,9 @@ def test_invalid_field_shape_raises() -> None:
 
     with pytest.raises(ValueError, match="shape"):
         trace_field_lines_curvilinear(
-            b_xi=bxi,
-            b_et=bet,
-            b_zt=bzt,
+            bxi=bxi,
+            bet=bet,
+            bzt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,
@@ -230,9 +230,9 @@ def test_invalid_scale_factor_shape_raises() -> None:
 
     with pytest.raises(ValueError, match="shape"):
         trace_field_lines_curvilinear(
-            b_xi=bxi,
-            b_et=bet,
-            b_zt=bzt,
+            bxi=bxi,
+            bet=bet,
+            bzt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,
@@ -256,9 +256,9 @@ def test_non_positive_grid_spacing_raises() -> None:
 
     with pytest.raises(ValueError, match="positive"):
         trace_field_lines_curvilinear(
-            b_xi=bxi,
-            b_et=bet,
-            b_zt=bzt,
+            bxi=bxi,
+            bet=bet,
+            bzt=bzt,
             dxi=0.0,
             det=1.0,
             dzt=1.0,
@@ -282,9 +282,9 @@ def test_non_positive_scale_factor_raises() -> None:
 
     with pytest.raises(ValueError, match="positive"):
         trace_field_lines_curvilinear(
-            b_xi=bxi,
-            b_et=bet,
-            b_zt=bzt,
+            bxi=bxi,
+            bet=bet,
+            bzt=bzt,
             dxi=1.0,
             det=1.0,
             dzt=1.0,
@@ -321,4 +321,31 @@ def test_positional_arguments_rejected() -> None:
             np.array([1.0]),
             1,
             2,
+        )
+
+
+def test_legacy_keyword_arguments_rejected() -> None:
+    bxi = np.zeros((2, 2, 3))
+    bet = np.zeros((2, 2, 3))
+    bzt = np.zeros((2, 2, 3))
+
+    with pytest.raises(TypeError):
+        legacy_kwargs = {
+            "b" + "_xi": bxi,
+            "b" + "_et": bet,
+            "b" + "_zt": bzt,
+        }
+        trace_field_lines_curvilinear(
+            **legacy_kwargs,  # type: ignore[arg-type]
+            dxi=1.0,
+            det=1.0,
+            dzt=1.0,
+            hxi=np.ones(3),
+            het=np.ones(3),
+            hzt=np.ones(3),
+            seed_i=np.array([1.0]),
+            seed_j=np.array([1.0]),
+            seed_k=np.array([1.0]),
+            line_center=1,
+            line_length=2,
         )
