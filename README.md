@@ -82,6 +82,15 @@ python -m venv venv
 pip install -U pip && pip install -e ".[dev,docs]"
 ```
 
+The extension module is built with `meson-python` and requires a Fortran
+compiler such as `gfortran`. For editable installs, keep the build tools from
+the active environment available:
+
+```shell
+pip install -U pip meson-python meson ninja
+pip install -e ".[dev,docs]" --no-build-isolation
+```
+
 ### Task automation with Makefile
 
 ```shell
