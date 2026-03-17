@@ -6,12 +6,8 @@ on:
   push:
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.12", "3.13"]
 
     steps:
       - name: Checkout
@@ -20,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
           cache: pip
 
       - name: Install Fortran compiler
@@ -45,6 +41,42 @@ jobs:
 
       - name: Type check (mypy)
         run: python -m mypy src
+
+  test-docs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+        install-mode: ["editable", "non-editable"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install Fortran compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install meson-python meson ninja
+
+      - name: Install package (editable)
+        if: matrix.install-mode == 'editable'
+        run: python -m pip install -e ".[dev,docs]" --no-build-isolation
+
+      - name: Install package (non-editable)
+        if: matrix.install-mode == 'non-editable'
+        run: python -m pip install ".[dev,docs]" --no-build-isolation
 
       - name: Unit tests
         run: pytest -q
