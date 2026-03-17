@@ -22,6 +22,13 @@ Status
 
 This package is under active development for research and learning purposes.
 
+Source code
+===========
+
+Source code is available on GitHub:
+
+`iijimahr/wind3d_field_lines <https://github.com/iijimahr/wind3d_field_lines>`_
+
 Installation
 ============
 
