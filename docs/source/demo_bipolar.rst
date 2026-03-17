@@ -61,11 +61,12 @@ Step-by-step example
    lzt = 60.0              # domain height [Mm]
    dxi = float(x[1] - x[0])
    det = float(y[1] - y[0])
+   dzt = lzt / (nz - 0.5)
 
    bxi, bet, bzt = compute_potential_field(
        bzt_bottom=bzt_bottom,
        dxi=dxi, det=det,
-       lzt=lzt, kx=nz,
+       dzt=dzt,
        hxi=np.ones(nz),   # Cartesian: h = 1
        het=np.ones(nz),
        hzt=np.ones(nz),

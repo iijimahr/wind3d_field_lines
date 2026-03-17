@@ -88,11 +88,12 @@ Discretisation
 --------------
 
 Grid points are placed at :math:`\zeta_k = k\,\Delta\zeta`
-(:math:`k = 0, \ldots, N_\zeta-1`) with
+(:math:`k = 0, \ldots, N_\zeta-1`), where :math:`\Delta\zeta` is the prescribed
+uniform grid spacing. The upper boundary is therefore located at
 
 .. math::
 
-   \Delta\zeta = \frac{L_\zeta}{N_\zeta - 1/2}.
+   L_\zeta = (N_\zeta - 1/2)\,\Delta\zeta.
 
 The ODE is discretised with a finite-volume scheme at interior points:
 

@@ -20,11 +20,12 @@ def _cartesian_h(kx: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def _make_grid(ix: int, jx: int, kx: int, lzt: float):
-    """Return (dxi, det, lzt, kx, hxi, het, hzt) for Cartesian domain."""
+    """Return (dxi, det, dzt, hxi, het, hzt) for Cartesian domain."""
     dxi = 1.0
     det = 1.0
+    dzt = lzt / (kx - 0.5)
     hxi, het, hzt = _cartesian_h(kx)
-    return dxi, det, lzt, kx, hxi, het, hzt
+    return dxi, det, dzt, hxi, het, hzt
 
 
 # ---------------------------------------------------------------------------
@@ -38,15 +39,14 @@ class TestCartesianUniformField:
     def test_bzt_equals_boundary(self):
         ix, jx, kx = 8, 8, 16
         lzt = 10.0
-        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        dxi, det, dzt, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
         bzt_bottom = np.ones((ix, jx)) * 3.7
 
         bxi, bet, bzt = compute_potential_field(
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -57,15 +57,14 @@ class TestCartesianUniformField:
     def test_bxi_bet_zero(self):
         ix, jx, kx = 8, 8, 16
         lzt = 10.0
-        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        dxi, det, dzt, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
         bzt_bottom = np.ones((ix, jx)) * 2.5
 
         bxi, bet, bzt = compute_potential_field(
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -77,15 +76,14 @@ class TestCartesianUniformField:
     def test_output_shape(self):
         ix, jx, kx = 6, 10, 12
         lzt = 5.0
-        dxi, det, lzt, kx, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        dxi, det, dzt, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
         bzt_bottom = np.ones((ix, jx))
 
         bxi, bet, bzt = compute_potential_field(
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -114,7 +112,8 @@ class TestCartesianAnalyticalSingleMode:
         det = 1.0
         hxi, het, hzt = _cartesian_h(kx)
 
-        dz = lzt / (kx - 0.5)
+        dzt = lzt / (kx - 0.5)
+        dz = dzt
         xi3 = np.arange(kx) * dz  # (kx,)
         k1_phys = 2.0 * np.pi / (ix * dxi)  # fundamental mode
         xi1 = np.arange(ix) * dxi  # (ix,)
@@ -125,8 +124,7 @@ class TestCartesianAnalyticalSingleMode:
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -149,7 +147,7 @@ class TestFluxConservation:
         rng = np.random.default_rng(42)
         ix, jx, kx = 16, 16, 20
         lzt = 8.0
-        dxi, det, _, _, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        dxi, det, dzt, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
 
         bzt_bottom = rng.standard_normal((ix, jx))
 
@@ -157,8 +155,7 @@ class TestFluxConservation:
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -188,15 +185,14 @@ class TestUpperBoundaryCondition:
         rng = np.random.default_rng(7)
         ix, jx, kx = 16, 16, 64
         lzt = 20.0
-        dxi, det, _, _, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
+        dxi, det, dzt, hxi, het, hzt = _make_grid(ix, jx, kx, lzt)
         bzt_bottom = rng.standard_normal((ix, jx))
 
         bxi, bet, bzt = compute_potential_field(
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -216,6 +212,7 @@ class TestPotentialCondition:
         dxi = 1.0
         det = 1.0
         hxi, het, hzt = _cartesian_h(kx)
+        dzt = lzt / (kx - 0.5)
 
         rng = np.random.default_rng(99)
         bzt_bottom = rng.standard_normal((ix, jx))
@@ -224,8 +221,7 @@ class TestPotentialCondition:
             bzt_bottom=bzt_bottom,
             dxi=dxi,
             det=det,
-            lzt=lzt,
-            kx=kx,
+            dzt=dzt,
             hxi=hxi,
             het=het,
             hzt=hzt,
@@ -261,8 +257,7 @@ class TestInputValidation:
             bzt_bottom=np.ones((ix, jx)),
             dxi=1.0,
             det=1.0,
-            lzt=5.0,
-            kx=kx,
+            dzt=5.0 / (kx - 0.5),
             hxi=np.ones(kx),
             het=np.ones(kx),
             hzt=np.ones(kx),
@@ -292,19 +287,24 @@ class TestInputValidation:
         with pytest.raises(ValueError, match="positive"):
             compute_potential_field(**args)
 
-    def test_non_positive_lzt(self):
+    def test_non_positive_dzt(self):
         args = self._default_args()
-        args["lzt"] = -1.0
+        args["dzt"] = -1.0
         with pytest.raises(ValueError, match="positive"):
             compute_potential_field(**args)
 
     def test_kx_too_small(self):
         args = self._default_args()
-        args["kx"] = 1
         args["hxi"] = np.ones(1)
         args["het"] = np.ones(1)
         args["hzt"] = np.ones(1)
         with pytest.raises(ValueError, match="kx"):
+            compute_potential_field(**args)
+
+    def test_inconsistent_scale_factor_lengths(self):
+        args = self._default_args()
+        args["het"] = np.ones(7)
+        with pytest.raises(ValueError, match="shape"):
             compute_potential_field(**args)
 
     def test_float32_input_accepted(self):

@@ -52,13 +52,14 @@ import numpy as np
 
 ix, jx, kx = 64, 64, 32
 lzt = 20.0  # domain height [Mm]
+dzt = lzt / (kx - 0.5)
 
 # Surface normal field (lower boundary)
 bzt_bottom = ...  # shape (ix, jx)
 
 bxi, bet, bzt = compute_potential_field(
     bzt_bottom=bzt_bottom,
-    dxi=1.0, det=1.0, lzt=lzt, kx=kx,
+    dxi=1.0, det=1.0, dzt=dzt,
     hxi=np.ones(kx), het=np.ones(kx), hzt=np.ones(kx),  # Cartesian
 )
 # bxi/bet/bzt : magnetic field components, shape (ix, jx, kx)

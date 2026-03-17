@@ -11,8 +11,7 @@ def compute_potential_field(
     bzt_bottom: NDArray[np.floating[Any]],
     dxi: float,
     det: float,
-    lzt: float,
-    kx: int,
+    dzt: float,
     hxi: NDArray[np.floating[Any]],
     het: NDArray[np.floating[Any]],
     hzt: NDArray[np.floating[Any]],
@@ -34,16 +33,13 @@ def compute_potential_field(
     bzt_bottom:
         Normal component of the magnetic field at the lower boundary
         (``k = 0``) with shape ``(ix, jx)``.
-    dxi, det:
-        Uniform grid spacing in the ``xi`` and ``eta`` directions.
-    lzt:
-        Domain length in the ``zeta`` direction.
-    kx:
-        Number of grid points in the ``zeta`` direction. Grid points are
-        located at ``zeta_k = k * dz`` where ``dz = lzt / (kx - 0.5)``.
+    dxi, det, dzt:
+        Uniform grid spacing in the ``xi``, ``eta``, and ``zeta`` directions.
     hxi, het, hzt:
         Scale factors ``hxi``, ``het``, ``hzt`` sampled at the grid points
-        ``zeta_k = k * dz`` (``k = 0, ..., kx - 1``), with shape ``(kx,)``.
+        ``zeta_k = k * dzt`` (``k = 0, ..., kx - 1``), with shape ``(kx,)``.
+        Their common length defines ``kx`` and the upper boundary location
+        ``L_zeta = (kx - 0.5) * dzt``.
 
     Returns
     -------
@@ -64,28 +60,27 @@ def compute_potential_field(
     het64 = np.asarray(het, dtype=np.float64)
     hzt64 = np.asarray(hzt, dtype=np.float64)
 
-    kx_i = int(kx)
-    if (
-        hxi64.shape != (kx_i,)
-        or het64.shape != (kx_i,)
-        or hzt64.shape != (kx_i,)
-    ):
+    if hxi64.ndim != 1 or het64.ndim != 1 or hzt64.ndim != 1:
+        raise ValueError("hxi, het, and hzt must have shape (kx,).")
+    if hxi64.shape != het64.shape or hxi64.shape != hzt64.shape:
         raise ValueError("hxi, het, and hzt must have shape (kx,).")
     if np.any(hxi64 <= 0) or np.any(het64 <= 0) or np.any(hzt64 <= 0):
         raise ValueError("hxi, het, and hzt must be positive.")
 
+    kx_i = hxi64.shape[0]
+
     dxi_f = float(dxi)
     det_f = float(det)
-    lzt_f = float(lzt)
+    dzt_f = float(dzt)
 
-    if dxi_f <= 0 or det_f <= 0:
-        raise ValueError("dxi and det must be positive.")
-    if lzt_f <= 0:
-        raise ValueError("lzt must be positive.")
     if kx_i < 2:
         raise ValueError("kx must be at least 2.")
+    if dxi_f <= 0 or det_f <= 0:
+        raise ValueError("dxi and det must be positive.")
+    if dzt_f <= 0:
+        raise ValueError("dzt must be positive.")
 
-    dz = lzt_f / (kx_i - 0.5)
+    dz = dzt_f
 
     # Scale factors at interior half-integer points: h_{k+1/2} = (h_k + h_{k+1}) / 2
     # shape (kx-1,)

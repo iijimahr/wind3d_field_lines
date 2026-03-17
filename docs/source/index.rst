@@ -69,10 +69,11 @@ Potential field extrapolation:
    from wind3d_field_lines import compute_potential_field
 
    ix, jx, kx = 64, 64, 32
+   dzt = 20.0 / (kx - 0.5)
    bxi, bet, bzt = compute_potential_field(
        bzt_bottom=bzt_bottom,       # surface normal field, shape (ix, jx)
        dxi=1.0, det=1.0,          # horizontal grid spacing
-       lzt=20.0, kx=kx,            # vertical domain length and grid points
+       dzt=dzt,                    # vertical grid spacing
        hxi=np.ones(kx),           # scale factors hxi, het, hzt at each level
        het=np.ones(kx),
        hzt=np.ones(kx),
