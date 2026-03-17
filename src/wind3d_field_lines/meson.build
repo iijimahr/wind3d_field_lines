@@ -10,35 +10,37 @@ py.install_sources(
   subdir: 'wind3d_field_lines',
 )
 
-f2py_wrappers = custom_target(
-  'bbtobln_wrappers',
-  input: 'fortran/field_line_integrator.f90',
-  output: [
-    '_bbtoblnmodule.c',
-    '_bbtobln-f2pywrappers.f',
-  ],
-  command: [
-    py,
-    '-m',
-    'numpy.f2py',
-    '@INPUT@',
-    '-m',
-    '_bbtobln',
-    '--lower',
-    '--build-dir',
-    '@OUTDIR@',
-  ],
-)
+if build_native_extension
+  f2py_wrappers = custom_target(
+    'bbtobln_wrappers',
+    input: 'fortran/field_line_integrator.f90',
+    output: [
+      '_bbtoblnmodule.c',
+      '_bbtobln-f2pywrappers.f',
+    ],
+    command: [
+      py_numpy,
+      '-m',
+      'numpy.f2py',
+      '@INPUT@',
+      '-m',
+      '_bbtobln',
+      '--lower',
+      '--build-dir',
+      '@OUTDIR@',
+    ],
+  )
 
-py.extension_module(
-  '_bbtobln',
-  [
-    'fortran/field_line_integrator.f90',
-    fortranobject_c,
-    f2py_wrappers,
-  ],
-  include_directories: numpy_includes,
-  dependencies: py_dep,
-  subdir: 'wind3d_field_lines',
-  install: true,
-)
+  py.extension_module(
+    '_bbtobln',
+    [
+      'fortran/field_line_integrator.f90',
+      fortranobject_c,
+      f2py_wrappers,
+    ],
+    include_directories: numpy_includes,
+    dependencies: py_dep,
+    subdir: 'wind3d_field_lines',
+    install: true,
+  )
+endif
