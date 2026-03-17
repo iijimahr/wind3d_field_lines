@@ -41,7 +41,8 @@ docs:
 
 .PHONY: clean
 clean:
-	rm -rf docs/build .pytest_cache .ruff_cache build
+	rm -rf docs/build .pytest_cache .ruff_cache build dist
+	rm -rf .mesonpy-*
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
